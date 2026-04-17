@@ -1,0 +1,24 @@
+project:
+  name: "HAM10000 Synthetic Augmentation Research"
+  seed: 42
+  task: "Nevus vs Melanoma"
+
+paths:
+  root: "/home/schica/proyecto-imagenes-y-vision"
+  data_raw: "data/raw"
+  data_processed: "data/processed"
+  experiments: "experiments"
+  reports: "reports"
+
+modeling:
+  image_size: 224
+  batch_size: 32
+  metrics:
+    - recall
+    - f1
+    - auc
+
+augmentation:
+  enabled: true
+  generator: "stable-diffusion"
+  strategy: "textual-inversion"

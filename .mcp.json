@@ -1,0 +1,20 @@
+{
+  "version": "1.0",
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-filesystem", "/home/schica/proyecto-imagenes-y-vision"],
+      "disabled": false
+    },
+    "git": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-git", "/home/schica/proyecto-imagenes-y-vision"],
+      "disabled": false
+    },
+    "python": {
+      "command": "python3",
+      "args": ["-m", "mcp_server_python"],
+      "disabled": false
+    }
+  }
+}

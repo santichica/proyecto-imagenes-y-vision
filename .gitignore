@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+
+# Project data and outputs
+data/
+experiments/
+reports/
+logs/
+
+# Model artifacts
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+
+# Local secrets and overrides
+.env
+.env.*
+!.env.example
+
+# Editor and OS files
+.DS_Store
+.vscode/
