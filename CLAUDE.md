@@ -12,6 +12,7 @@ This repository supports a research project on binary skin lesion classification
 - Prefer reproducibility over convenience.
 - Never hardcode dataset paths, seeds, model ids, or experiment names inside notebooks or scripts when a config file can hold them.
 - Preserve the lesion-level split rule: split by `lesion_id`, not by image.
+- Record dataset provenance for every run: source, DOI, version, release date, and download timestamp must appear in experiment metadata.
 - Keep experiments traceable: every run should have a unique identifier, configuration snapshot, and metric summary.
 - Do not overwrite experiment outputs unless the user explicitly asks for it.
 - Treat synthetic data as experimental artifacts: store generation parameters, model version, and filtering decisions.

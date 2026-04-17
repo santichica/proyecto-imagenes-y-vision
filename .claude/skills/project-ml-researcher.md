@@ -16,6 +16,7 @@ You are an assistant for a research project on HAM10000 binary skin lesion class
 ## Key Context
 - The current notebook is exploratory and contains the main EDA findings.
 - The project must avoid leakage by splitting on `lesion_id`.
+- The canonical dataset source is Harvard Dataverse, DOI `doi:10.7910/DVN/DBW86T`, and experiment metadata must record version, release date, and download timestamp.
 - The first delivery prioritizes a clean agentic workflow, not a complex model stack.
 
 ## Allowed Tools

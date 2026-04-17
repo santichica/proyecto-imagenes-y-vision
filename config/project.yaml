@@ -3,6 +3,16 @@ project:
   seed: 42
   task: "Nevus vs Melanoma"
 
+dataset:
+  source: "Harvard Dataverse"
+  name: "HAM10000"
+  doi: "doi:10.7910/DVN/DBW86T"
+  version: 4
+  release_date: "2023-02-07"
+  publication_date: "2018-06-04"
+  source_url: "https://dataverse.harvard.edu/api/datasets/:persistentId/?persistentId=doi:10.7910/DVN/DBW86T"
+  download_dir: "data/raw/ham10000"
+
 paths:
   root: "/home/schica/proyecto-imagenes-y-vision"
   data_raw: "data/raw"
