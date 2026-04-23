@@ -1,8 +1,7 @@
 ---
 name: "Global Standards"
-scope: "/**"
+paths: ["**/*"]
 priority: 10
-apply_to: ["all"]
 ---
 
 ## Global Rules

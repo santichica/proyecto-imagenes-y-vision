@@ -1,8 +1,7 @@
 ---
 name: "Notebook Workflow"
-scope: "/**/*.ipynb"
+paths: ["**/*.ipynb"]
 priority: 20
-apply_to: ["ipynb"]
 ---
 
 ## Notebook Rules

@@ -1,8 +1,7 @@
 ---
 name: "Verification Gates"
-scope: ["/tests/**", "/scripts/**"]
+paths: ["tests/**/*", "scripts/**/*"]
 priority: 50
-apply_to: ["py"]
 ---
 
 ## Verification Rules

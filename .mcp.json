@@ -4,7 +4,14 @@
     "filesystem": {
       "command": "npx",
       "args": ["@modelcontextprotocol/server-filesystem", "/home/schica/proyecto-imagenes-y-vision"],
-      "disabled": false
+      "disabled": false,
+      "env": {
+        "PROJECT_ROOT": "/home/schica/proyecto-imagenes-y-vision",
+        "DATA_RAW": "data/raw/ham10000",
+        "DATA_PROCESSED": "data/processed",
+        "EXPERIMENTS_DIR": "experiments",
+        "REPORTS_DIR": "reports"
+      }
     },
     "git": {
       "command": "npx",

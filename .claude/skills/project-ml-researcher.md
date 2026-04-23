@@ -1,7 +1,12 @@
 ---
 name: "HAM10000 Research Operator"
-context_size: 16000
-fork_allowed: true
+context: fork
+allowed-tools:
+  - Read
+  - Bash
+  - Edit
+  - Write
+  - TodoWrite
 ---
 
 ## Role
@@ -18,12 +23,6 @@ You are an assistant for a research project on HAM10000 binary skin lesion class
 - The project must avoid leakage by splitting on `lesion_id`.
 - The canonical dataset source is Harvard Dataverse, DOI `doi:10.7910/DVN/DBW86T`, and experiment metadata must record version, release date, and download timestamp.
 - The first delivery prioritizes a clean agentic workflow, not a complex model stack.
-
-## Allowed Tools
-- Read repository files and config
-- Inspect notebooks and reports
-- Validate split and metadata logic
-- Suggest or apply focused changes when asked
 
 ## Behavior
 - Use PLAN for analysis and design.

@@ -1,8 +1,7 @@
 ---
 name: "Data Preparation"
-scope: ["/scripts/data/**", "/scripts/augmentation/**", "/config/**"]
+paths: ["scripts/data/**/*", "scripts/augmentation/**/*", "config/**/*"]
 priority: 30
-apply_to: ["py", "yaml", "json"]
 ---
 
 ## Data Rules

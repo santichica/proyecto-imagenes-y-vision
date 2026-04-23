@@ -1,8 +1,7 @@
 ---
 name: "Training and Evaluation"
-scope: ["/scripts/training/**", "/experiments/**"]
+paths: ["scripts/training/**/*", "experiments/**/*"]
 priority: 40
-apply_to: ["py", "json", "md"]
 ---
 
 ## Model Rules

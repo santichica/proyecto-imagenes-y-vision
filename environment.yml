@@ -1,0 +1,42 @@
+name: ham10000-augmentation
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+
+  # Ciencia de datos base
+  - numpy>=1.26
+  - pandas>=2.2
+  - scikit-learn>=1.4
+  - pyyaml>=6.0
+  - pillow>=10.0
+  - matplotlib>=3.8
+  - seaborn>=0.13
+  - tqdm>=4.66
+
+  # Notebooks
+  - jupyterlab>=4.0
+  - ipykernel
+
+  # Tests
+  - pytest>=8.0
+
+  - pip:
+      # PyTorch con CUDA 13.0 — requiere GPU sm_75+ (T4, V100, A100, RTX 30xx+)
+      # Para GPUs antiguas (GTX 10xx, sm_61) usar cu118 en su lugar
+      - torch==2.11.0+cu130 --index-url https://download.pytorch.org/whl/cu130
+      - torchvision --index-url https://download.pytorch.org/whl/cu130
+
+      # Generación sintética
+      - diffusers>=0.27
+      - transformers>=4.40
+      - accelerate>=0.30
+      - safetensors>=0.4
+
+      # Métricas generativas (FID, IS)
+      - torchmetrics[image]>=1.3
+
+      # Utilidades
+      - python-dotenv>=1.0
