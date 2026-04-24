@@ -1,6 +1,6 @@
 ---
 name: "Data Preparation"
-paths: ["scripts/data/**/*", "scripts/augmentation/**/*", "config/**/*"]
+paths: ["scripts/data_processing/**/*", "scripts/augmentation/**/*", "config/**/*"]
 priority: 30
 ---
 

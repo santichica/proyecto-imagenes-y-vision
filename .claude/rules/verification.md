@@ -1,6 +1,6 @@
 ---
 name: "Verification Gates"
-paths: ["tests/**/*", "scripts/**/*"]
+paths: ["tests/**/*", "scripts/data_processing/**/*", "scripts/training/**/*", "scripts/augmentation/**/*"]
 priority: 50
 ---
 

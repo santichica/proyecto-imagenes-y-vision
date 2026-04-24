@@ -48,10 +48,10 @@ Los archivos quedan en `data/raw/ham10000/`. La descarga es de ~3.5 GB e incluye
 
 ```bash
 # Extraer imágenes de los ZIPs → data/processed/images/
-python scripts/data/01_extract.py
+python scripts/data_processing/01_extract.py
 
 # Split lesion-aware (70/15/15) → data/processed/splits/
-python scripts/data/02_split.py
+python scripts/data_processing/02_split.py
 
 # Verificar que no hay data leakage
 pytest tests/test_split_leakage.py -v
