@@ -86,7 +86,7 @@ def main() -> int:
     parser.add_argument("--force", action="store_true", help="Redownload files even if they already exist")
     args = parser.parse_args()
 
-    repo_root = Path(__file__).resolve().parents[2]
+    repo_root = Path(__file__).resolve().parents[1]
     config_path = (repo_root / args.config).resolve()
     dataset_config = read_dataset_config(config_path)
 
