@@ -11,6 +11,7 @@ import torch.nn as nn
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from torch.utils.data import DataLoader
+from tqdm.auto import tqdm
 
 
 def train(
@@ -40,7 +41,8 @@ def train(
         # --- train ---
         model.train()
         train_loss, correct, total = 0.0, 0, 0
-        for imgs, labels in train_loader:
+        pbar = tqdm(train_loader, desc=f"Epoch {epoch:02d}/{epochs}", leave=False)
+        for imgs, labels in pbar:
             imgs, labels = imgs.to(device), labels.to(device)
             optimizer.zero_grad()
             logits = model(imgs)
@@ -50,6 +52,7 @@ def train(
             train_loss += loss.item() * len(labels)
             correct += (logits.argmax(1) == labels).sum().item()
             total += len(labels)
+            pbar.set_postfix(loss=f"{loss.item():.4f}", acc=f"{correct/total:.3f}")
 
         scheduler.step()
         train_acc = correct / total
@@ -73,7 +76,8 @@ def train(
             f"Epoch {epoch:02d}/{epochs} | "
             f"loss={train_loss:.4f} acc={train_acc:.3f} | "
             f"val_loss={val_metrics['loss']:.4f} val_f1_mel={val_metrics['f1_mel']:.3f} "
-            f"val_auc={val_metrics['auc']:.3f} | {elapsed:.0f}s"
+            f"val_auc={val_metrics['auc']:.3f} | {elapsed:.0f}s",
+            flush=True,
         )
 
         if val_metrics["f1_mel"] >= best_f1:

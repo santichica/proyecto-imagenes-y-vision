@@ -56,7 +56,12 @@ class HAM10000Dataset(Dataset):
         return torch.tensor(sample_weights, dtype=torch.float)
 
 
-def make_loaders(splits_dir: Path, batch_size: int, num_workers: int = 4):
+def make_loaders(
+    splits_dir: Path,
+    batch_size: int,
+    num_workers: int = 4,
+    device: torch.device | None = None,
+):
     train_ds = HAM10000Dataset(splits_dir / "train.csv", transform=TRAIN_TRANSFORMS)
     val_ds   = HAM10000Dataset(splits_dir / "val.csv",   transform=EVAL_TRANSFORMS)
     test_ds  = HAM10000Dataset(splits_dir / "test.csv",  transform=EVAL_TRANSFORMS)
@@ -67,16 +72,18 @@ def make_loaders(splits_dir: Path, batch_size: int, num_workers: int = 4):
         replacement=True,
     )
 
+    pin_memory = device is not None and device.type == "cuda"
+
     train_loader = DataLoader(
         train_ds, batch_size=batch_size, sampler=sampler,
-        num_workers=num_workers, pin_memory=True,
+        num_workers=num_workers, pin_memory=pin_memory,
     )
     val_loader = DataLoader(
         val_ds, batch_size=batch_size, shuffle=False,
-        num_workers=num_workers, pin_memory=True,
+        num_workers=num_workers, pin_memory=pin_memory,
     )
     test_loader = DataLoader(
         test_ds, batch_size=batch_size, shuffle=False,
-        num_workers=num_workers, pin_memory=True,
+        num_workers=num_workers, pin_memory=pin_memory,
     )
     return train_loader, val_loader, test_loader
