@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>GAN Image Generator</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<div class="container">
+  <h1>🧠 GAN Image Generator</h1>
+  <p class="subtitle">Genera imágenes para combatir con tu desbalanceo de clases</p>
+
+  <div class="controls">
+    <input type="number" id="num" placeholder="" />
+    <button onclick="generate()">Generar</button>
+  </div>
+
+  <div id="loading" class="loading-overlay hidden">
+    <div class="spinner"></div>
+    <p>Generando imágenes...</p>
+  </div>
+
+  <div id="images" class="grid"></div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
