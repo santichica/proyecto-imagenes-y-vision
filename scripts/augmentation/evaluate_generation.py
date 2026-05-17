@@ -23,33 +23,35 @@ class SafeImageDataset(Dataset):
         self.folder_path = Path(folder_path)
         self.valid_paths = []
         self.size = size
-        
+        self.imgs = []
         if not self.folder_path.exists():
             print(f"Error: La ruta {folder_path} no existe.")
             return
-            
-        for file in self.folder_path.iterdir():
-            if file.is_file() and file.suffix.lower() in ext_filter:
-                try:
-                    # Test rápido para validar integridad del archivo
-                    with Image.open(file) as img:
-                        img.verify()
-                    self.valid_paths.append(file)
-                except (Exception, UnidentifiedImageError):
-                    print(f"[Advertencia] Ignorando archivo inválido: {file.name}")
+        
+        #for file in self.folder_path.iterdir():
+         #   if file.is_file() and file.suffix.lower() in ext_filter:
+          #      try:
+           #         # Test rápido para validar integridad del archivo
+            #        with Image.open(file) as img:
+             #           img.verify()
+              #      self.valid_paths.append(file)
+               # except (Exception, UnidentifiedImageError):
+                #    print(f"[Advertencia] Ignorando archivo inválido: {file.name}")
                     
     def __len__(self):
         return len(self.valid_paths)
         
     def __getitem__(self, idx):
         path = self.valid_paths[idx]
-        with Image.open(path) as img:
-            img = img.convert('RGB')
-            # Resizing to ensure all images have the same dimensions for collation
-            img = img.resize(self.size, Image.BILINEAR)
-            # Convierte directamente a torch.uint8 de forma eficiente
-            tensor = F.pil_to_tensor(img)
-        return tensor
+       
+        try:
+            with Image.open(path) as img:
+                img = img.convert("RGB")
+                img = img.resize(self.size)
+                return F.pil_to_tensor(img)
+
+        except Exception:
+            return torch.zeros((3, *self.size), dtype=torch.uint8)
 
 def evaluate_generation(real_dir: str, gen_dir: str, batch_size: int = 32):
     """
@@ -78,7 +80,10 @@ def evaluate_generation(real_dir: str, gen_dir: str, batch_size: int = 32):
         isc=True,
         fid=True,
         batch_size=batch_size,
-        verbose=False # Silenciamos el log recargado para limpieza
+        verbose=False, # Silenciamos el log recargado para limpieza
+        samples_find_deep=True,
+        input1_cache_name="gen_cache",
+        input2_cache_name="real_cache",
     )
     
     # Formateo de salida estandarizado
