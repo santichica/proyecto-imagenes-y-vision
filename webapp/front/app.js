@@ -36,16 +36,36 @@ async function generate() {
 }
 
 // 🔥 CAMBIO DE SECCIÓN
+// 🔥 CAMBIO DE SECCIÓN (ACTUALIZADO PRO)
 function showSection(sectionId) {
+
+    // 🔥 ocultar secciones
     document.querySelectorAll(".section").forEach(sec => {
         sec.classList.remove("active");
     });
 
+    // 🔥 mostrar sección actual
     document.getElementById(sectionId).classList.add("active");
+
+    // 🔥 NAVBAR: estado activo bonito
+    const navItems = document.querySelectorAll(".navbar li");
+
+    navItems.forEach(li => {
+        li.classList.remove("active");
+    });
+
+    // detectar cuál activar (más robusto)
+    if (sectionId === "generator") {
+        navItems[0].classList.add("active");
+    } else if (sectionId === "results") {
+        navItems[1].classList.add("active");
+    }
 
     // 🔥 renderizar gráfica SOLO cuando se muestra
     if (sectionId === "results") {
-        setTimeout(createChart, 100);
+        setTimeout(() => {
+            createChart();
+        }, 100);
     }
 }
 
