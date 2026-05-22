@@ -6,7 +6,6 @@ body {
 }
 
 /* NAVBAR */
-/* 🔥 NAVBAR MODERNA */
 .navbar {
   display: flex;
   justify-content: space-between;
@@ -51,7 +50,7 @@ body {
   background: rgba(255,255,255,0.08);
 }
 
-/* ACTIVO (🔥 clave visual) */
+
 .navbar li.active {
   background: #6c5ce7;
   color: white;
@@ -199,8 +198,25 @@ button:hover {
   padding: 20px;
 }
 
-/* 🔥 el canvas NO debe tener altura fija */
+
 #fidChart {
   width: 100% !important;
   height: 100% !important;
+}
+
+
+.download-btn {
+  margin-top: 20px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #00ff99, #00ccff);
+  color: black;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.download-btn:hover {
+  transform: scale(1.05);
 }

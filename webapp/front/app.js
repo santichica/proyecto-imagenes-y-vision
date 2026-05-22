@@ -1,17 +1,20 @@
 const API_URL = "http://127.0.0.1:8000";
 
 let chart = null;
+let generatedImages = [];
 
-// 🔥 GENERAR IMÁGENES
+// GENERAR IMÁGENES
 async function generate() {
     const num = document.getElementById("num").value;
     const container = document.getElementById("images");
     const loading = document.getElementById("loading");
-    const button = document.querySelector("button");
+    const button = document.querySelector(".controls button");
+    const downloadBtn = document.getElementById("downloadBtn");
 
     container.innerHTML = "";
     loading.classList.remove("hidden");
     button.disabled = true;
+    downloadBtn.classList.add("hidden");
 
     try {
         const res = await fetch(`${API_URL}/generate?num_images=${num}`);
@@ -19,12 +22,17 @@ async function generate() {
 
         loading.classList.add("hidden");
 
+        generatedImages = data.images; // 🔥 guardar rutas
+
         data.images.forEach(path => {
             const img = document.createElement("img");
             img.src = `${API_URL}/${path}`;
             img.loading = "lazy";
             container.appendChild(img);
         });
+
+        // mostrar botón descarga
+        downloadBtn.classList.remove("hidden");
 
     } catch (error) {
         loading.classList.add("hidden");
@@ -35,65 +43,62 @@ async function generate() {
     }
 }
 
-// 🔥 CAMBIO DE SECCIÓN
-// 🔥 CAMBIO DE SECCIÓN (ACTUALIZADO PRO)
-function showSection(sectionId) {
+// DESCARGAR ZIP
+async function downloadImages() {
+    if (!generatedImages.length) return;
 
-    // 🔥 ocultar secciones
+    const zip = new JSZip();
+
+    const promises = generatedImages.map(async (path, index) => {
+        const response = await fetch(`${API_URL}/${path}`);
+        const blob = await response.blob();
+        zip.file(`image_${index + 1}.png`, blob);
+    });
+
+    await Promise.all(promises);
+
+    const content = await zip.generateAsync({ type: "blob" });
+
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(content);
+    link.download = "imagenes.zip";
+    link.click();
+}
+
+// CAMBIO DE SECCIÓN
+function showSection(sectionId) {
     document.querySelectorAll(".section").forEach(sec => {
         sec.classList.remove("active");
     });
 
-    // 🔥 mostrar sección actual
     document.getElementById(sectionId).classList.add("active");
 
-    // 🔥 NAVBAR: estado activo bonito
     const navItems = document.querySelectorAll(".navbar li");
+    navItems.forEach(li => li.classList.remove("active"));
 
-    navItems.forEach(li => {
-        li.classList.remove("active");
-    });
+    if (sectionId === "generator") navItems[0].classList.add("active");
+    if (sectionId === "results") navItems[1].classList.add("active");
 
-    // detectar cuál activar (más robusto)
-    if (sectionId === "generator") {
-        navItems[0].classList.add("active");
-    } else if (sectionId === "results") {
-        navItems[1].classList.add("active");
-    }
-
-    // 🔥 renderizar gráfica SOLO cuando se muestra
     if (sectionId === "results") {
-        setTimeout(() => {
-            createChart();
-        }, 100);
+        setTimeout(createChart, 100);
     }
 }
 
-// 📊 CREAR GRÁFICA
+// GRÁFICA
 function createChart() {
     const ctx = document.getElementById('fidChart');
 
     if (!ctx) return;
 
-    // evitar duplicados
-    if (chart) {
-        chart.destroy();
-    }
+    if (chart) chart.destroy();
 
     const models = ["LoRA", "LoRA NEW", "img2img", "GAN", "GAN NEW"];
-
-    const fidValues = [
-        155.0089,
-        155.0089,
-        53.2477,
-        254.8915,
-        199.1471
-    ];
+    const fidValues = [155.0089, 155.0089, 53.2477, 254.8915, 199.1471];
 
     const colors = fidValues.map(v => {
-        if (v < 80) return "#00ff99";   // bueno
-        if (v < 150) return "#ffd166"; // medio
-        return "#ef476f";              // malo
+        if (v < 80) return "#00ff99";
+        if (v < 150) return "#ffd166";
+        return "#ef476f";
     });
 
     chart = new Chart(ctx, {
@@ -108,21 +113,13 @@ function createChart() {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false, // 🔥 clave
+            maintainAspectRatio: false,
             plugins: {
-                legend: {
-                    labels: {
-                        color: "white"
-                    }
-                }
+                legend: { labels: { color: "white" } }
             },
             scales: {
-                x: {
-                    ticks: { color: "white" }
-                },
-                y: {
-                    ticks: { color: "white" }
-                }
+                x: { ticks: { color: "white" } },
+                y: { ticks: { color: "white" } }
             }
         }
     });

@@ -7,9 +7,8 @@
 </head>
 <body>
 
-<!-- NAVBAR -->
 <nav class="navbar">
-  <h2 class="logo">🧠 GAN App</h2>
+  <h2 class="logo">GAN App</h2>
   <ul>
     <li class="active" onclick="showSection('generator')">
       Generación de imágenes
@@ -20,7 +19,6 @@
   </ul>
 </nav>
 
-<!-- GENERADOR -->
 <div id="generator" class="section active">
   <div class="container">
     <h1>GAN Image Generator</h1>
@@ -31,6 +29,10 @@
       <button onclick="generate()">Generar</button>
     </div>
 
+    <button id="downloadBtn" class="download-btn hidden" onclick="downloadImages()">
+      Descargar imágenes
+    </button>
+
     <div id="loading" class="loading-overlay hidden">
       <div class="spinner"></div>
       <p>Generando imágenes...</p>
@@ -40,11 +42,10 @@
   </div>
 </div>
 
-<!-- RESULTADOS -->
 <div id="results" class="section">
   <div class="container">
-    <h1>📊 Resultados comparativos</h1>
-    <p class="subtitle">FID por modelo (menor es mejor)</p>
+    <h1>Resultados comparativos</h1>
+    <p class="subtitle">FID por modelo</p>
 
     <div class="chart-container">
       <canvas id="fidChart"></canvas>
@@ -52,6 +53,8 @@
   </div>
 </div>
 
+<!-- LIB PARA ZIP -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="app.js"></script>
 
