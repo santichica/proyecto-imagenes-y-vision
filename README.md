@@ -67,7 +67,7 @@ Abre JupyterLab y selecciona el kernel **HAM10000 Augmentation**:
 jupyter lab
 ```
 
-Abre [HAM10000_baseline.ipynb](HAM10000_baseline.ipynb) y ejecuta todas las celdas en orden.
+Abre [HAM10000_baseline.ipynb](notebooks/exploration/HAM10000_baseline.ipynb) y ejecuta todas las celdas en orden.
 
 Al finalizar, los resultados se guardan automáticamente en `experiments/<run_id>/`:
 

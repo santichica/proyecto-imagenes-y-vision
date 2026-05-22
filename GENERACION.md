@@ -34,7 +34,7 @@ de melanoma del split de entrenamiento.
 
 ## Paso 1 — Textual Inversion
 
-Abre **`HAM10000_textual_inversion.ipynb`** y ejecuta todas las celdas en orden.
+Abre **`notebooks/generation/HAM10000_textual_inversion.ipynb`** y ejecuta todas las celdas en orden.
 
 Aprende el token `<mel-skin>` en 5 000 pasos de fine-tuning del text encoder de
 Stable Diffusion v1.5.
@@ -64,7 +64,7 @@ Mi unidad/ham10000-augmentation/models/mel_skin_embedding_final.pt
 
 ## Paso 2 — Generación
 
-Abre **`HAM10000_generation.ipynb`** y ejecuta todas las celdas.
+Abre **`notebooks/generation/HAM10000_generation.ipynb`** y ejecuta todas las celdas.
 
 Genera dos lotes de imágenes sintéticas:
 

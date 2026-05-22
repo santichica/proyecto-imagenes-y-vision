@@ -11,7 +11,7 @@ Este proyecto sigue el proceso iterativo definido por **CRISP-ML(Q)** (Studer et
 | Fase CRISP-ML(Q) | Descripción en este proyecto | Artefactos |
 |---|---|---|
 | **1. Business & Research Understanding** | Definir la pregunta de investigación: ¿puede la augmentación sintética con Stable Diffusion mejorar la detección de melanoma en un dataset desbalanceado? | `CLAUDE.md` §Fases, `config/project.yaml` |
-| **2. Data Understanding** | Análisis exploratorio de HAM10000: distribución de clases, diversidad morfológica, desbalance severo mel/nv | `HAM10000_EDA.ipynb`, `data/processed/splits/metadata.json` |
+| **2. Data Understanding** | Análisis exploratorio de HAM10000: distribución de clases, diversidad morfológica, desbalance severo mel/nv | `notebooks/exploration/HAM10000_EDA.ipynb`, `data/processed/splits/metadata.json` |
 | **3. Data Preparation** | Split lesion-aware (70/15/15 por `lesion_id`), extracción de imágenes, preparación de conjuntos para augmentación y clasificación | `scripts/data_processing/01_extract.py`, `02_split.py`, `tests/test_split_leakage.py` |
 | **4. Modeling** | Entrenamiento de modelos generativos (TI, img2img, LoRA, Derm-T2IM, WGAN-GP) y clasificador EfficientNet-B0 bajo 4 escenarios de augmentación | `notebooks/generation/`, `GAN/HAM10000_GAN.ipynb`, `HAM10000_classification_final.ipynb` |
 | **5. Evaluation** | Comparación de escenarios con métricas clínicas (AUC, Recall melanoma, F1) y de calidad generativa (FID, Inception Score) | `HAM10000_quality_evaluation.ipynb`, `scripts/augmentation/evaluate_generation.py`, `experiments/` |
@@ -52,7 +52,7 @@ La métrica primaria es el **Recall de melanoma** (sensibilidad): priorizar la d
 - Alta variabilidad intraclase en melanoma (pigmentación, bordes, tamaño).
 - Las imágenes de nevus dominan en volumen y en diversidad visual.
 
-Ver análisis completo: [`HAM10000_EDA.ipynb`](HAM10000_EDA.ipynb)
+Ver análisis completo: [`HAM10000_EDA.ipynb`](notebooks/exploration/HAM10000_EDA.ipynb)
 
 ---
 
@@ -93,22 +93,22 @@ Se exploraron cuatro estrategias de síntesis de imágenes dermoscópicas de mel
 - **Base:** `runwayml/stable-diffusion-v1-5`
 - **Token aprendido:** `<mel-skin>` (5,000 pasos, ~801 imágenes de melanoma)
 - **Imágenes generadas:** 4,500
-- **Notebook:** `HAM10000_textual_inversion.ipynb` → `HAM10000_generation.ipynb`
+- **Notebook:** `notebooks/generation/HAM10000_textual_inversion.ipynb` → `notebooks/generation/HAM10000_generation.ipynb`
 
 #### Img2Img
 - Variaciones de imágenes reales de melanoma con `strength` configurable
 - **Imágenes generadas:** 2,403
-- **Notebook:** `HAM10000_generation.ipynb`
+- **Notebook:** `notebooks/generation/HAM10000_generation.ipynb`
 
 #### LoRA Fine-tuning
 - Adaptadores de bajo rango sobre SD v1.5, entrenados sobre melanoma
 - Permite control más fino sobre características dermoscópicas específicas
-- **Notebook:** `HAM10000_lora_training.ipynb`
+- **Notebook:** `notebooks/generation/HAM10000_lora_training.ipynb`
 
 #### Derm-T2IM (img2img dermatología-específico)
 - Modelo base especializado en imágenes dermoscópicas
 - Generación condicionada por imagen real (img2img)
-- **Notebook:** `HAM10000_derm_generation.ipynb`
+- **Notebook:** `notebooks/generation/HAM10000_derm_generation.ipynb`
 
 #### WGAN-GP (GAN clásica)
 - Framework: TensorFlow/Keras, imágenes 64×64 px
