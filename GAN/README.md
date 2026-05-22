@@ -9,3 +9,6 @@ pip install pandas matplotlib
 
 # 3. Validar version de keras: debe ser 2.15.x
 pip list | grep keras
+
+# 4. Ejecutar back
+python -m uvicorn main:app --reload 
