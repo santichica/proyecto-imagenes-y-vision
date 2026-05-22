@@ -82,3 +82,44 @@ experiments/
     ├── roc_curve.png
     └── training_curves.png
 ```
+
+---
+
+## 5. Estructura de Google Drive (Colab)
+
+Los notebooks Colab esperan la siguiente estructura en `Mi unidad/`:
+
+```
+ham10000-augmentation/
+├── data/
+│   ├── classification_data.zip        ← imágenes reales procesadas + splits
+│   └── melanoma_train_for_colab.zip   ← imágenes mel para entrenamiento TI
+├── synthetic/
+│   ├── textual_inversion/             ← ~4 500 imágenes TI  (*.jpg)
+│   ├── img2img/                       ← ~2 400 imágenes img2img  (*.jpg)
+│   ├── lora/                          ← imágenes LoRA  (*.jpg)
+│   ├── gan_final/                     ← imágenes WGAN-GP  (*.png)
+│   ├── derm_s040/                     ← Derm-T2IM strength=0.40  (*.jpg)
+│   └── derm_s005/                     ← Derm-T2IM strength=0.05  (*.jpg)
+├── models/
+│   └── mel_skin_embedding_final.pt    ← embedding Textual Inversion
+└── experiments/
+    └── YYYYMMDD_HHMMSS_<escenario>/   ← resultados por run
+```
+
+> **Nota:** los notebooks de generación guardan las imágenes directamente en `synthetic/<subdir>/`.
+> Los ZIPs de GAN y LoRA deben descomprimirse en sus respectivas subcarpetas antes de correr
+> el notebook de clasificación.
+
+---
+
+## 6. Clasificación comparativa (Colab)
+
+El experimento principal compara 4 métodos de augmentación bajo el mismo volumen (2×):
+
+| Notebook | Descripción |
+|---|---|
+| [`HAM10000_classification_comparative.ipynb`](HAM10000_classification_comparative.ipynb) | 6 escenarios: baseline · TI · LoRA · GAN · Derm-T2IM · synthetic-only |
+| [`HAM10000_quality_evaluation.ipynb`](HAM10000_quality_evaluation.ipynb) | Métricas FID e Inception Score por generador |
+
+Ver diseño completo en [METHODOLOGY.md](METHODOLOGY.md).
