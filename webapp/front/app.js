@@ -1,28 +1,24 @@
 const API_URL = "http://127.0.0.1:8000";
 
+let chart = null;
+
+// 🔥 GENERAR IMÁGENES
 async function generate() {
     const num = document.getElementById("num").value;
     const container = document.getElementById("images");
     const loading = document.getElementById("loading");
     const button = document.querySelector("button");
 
-    // 🔥 Limpiar UI
     container.innerHTML = "";
-
-    // 🔥 Mostrar loader
     loading.classList.remove("hidden");
-
-    // 🔥 Deshabilitar botón
     button.disabled = true;
 
     try {
         const res = await fetch(`${API_URL}/generate?num_images=${num}`);
         const data = await res.json();
 
-        // 🔥 Ocultar loader
         loading.classList.add("hidden");
 
-        // 🔥 Mostrar imágenes
         data.images.forEach(path => {
             const img = document.createElement("img");
             img.src = `${API_URL}/${path}`;
@@ -31,21 +27,83 @@ async function generate() {
         });
 
     } catch (error) {
-        // 🔥 Ocultar loader en error
         loading.classList.add("hidden");
-
         alert("❌ Error generando imágenes");
         console.error(error);
     } finally {
-        // 🔥 Rehabilitar botón
         button.disabled = false;
     }
 }
 
+// 🔥 CAMBIO DE SECCIÓN
 function showSection(sectionId) {
     document.querySelectorAll(".section").forEach(sec => {
         sec.classList.remove("active");
     });
 
     document.getElementById(sectionId).classList.add("active");
+
+    // 🔥 renderizar gráfica SOLO cuando se muestra
+    if (sectionId === "results") {
+        setTimeout(createChart, 100);
+    }
+}
+
+// 📊 CREAR GRÁFICA
+function createChart() {
+    const ctx = document.getElementById('fidChart');
+
+    if (!ctx) return;
+
+    // evitar duplicados
+    if (chart) {
+        chart.destroy();
+    }
+
+    const models = ["LoRA", "LoRA NEW", "img2img", "GAN", "GAN NEW"];
+
+    const fidValues = [
+        155.0089,
+        155.0089,
+        53.2477,
+        254.8915,
+        199.1471
+    ];
+
+    const colors = fidValues.map(v => {
+        if (v < 80) return "#00ff99";   // bueno
+        if (v < 150) return "#ffd166"; // medio
+        return "#ef476f";              // malo
+    });
+
+    chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: models,
+            datasets: [{
+                label: 'FID (menor es mejor)',
+                data: fidValues,
+                backgroundColor: colors
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false, // 🔥 clave
+            plugins: {
+                legend: {
+                    labels: {
+                        color: "white"
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: "white" }
+                },
+                y: {
+                    ticks: { color: "white" }
+                }
+            }
+        }
+    });
 }

@@ -7,7 +7,7 @@
 </head>
 <body>
 
-<!-- 🔥 NAVBAR -->
+<!-- NAVBAR -->
 <nav class="navbar">
   <h2 class="logo">🧠 GAN App</h2>
   <ul>
@@ -16,7 +16,7 @@
   </ul>
 </nav>
 
-<!-- 🔥 SECCIÓN GENERADOR -->
+<!-- GENERADOR -->
 <div id="generator" class="section active">
   <div class="container">
     <h1>GAN Image Generator</h1>
@@ -36,14 +36,15 @@
   </div>
 </div>
 
-<!-- 🔥 SECCIÓN RESULTADOS -->
+<!-- RESULTADOS -->
 <div id="results" class="section">
   <div class="container">
     <h1>📊 Resultados comparativos</h1>
-    <p class="subtitle">Evaluación del modelo</p>
+    <p class="subtitle">FID por modelo (menor es mejor)</p>
 
-    <!-- Aquí pondrás tus gráficas -->
-    <canvas id="lossChart"></canvas>
+    <div class="chart-container">
+      <canvas id="fidChart"></canvas>
+    </div>
   </div>
 </div>
 
