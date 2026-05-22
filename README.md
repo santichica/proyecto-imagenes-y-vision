@@ -93,14 +93,14 @@ Los notebooks Colab esperan la siguiente estructura en `Mi unidad/`:
 ham10000-augmentation/
 ├── data/
 │   ├── classification_data.zip        ← imágenes reales procesadas + splits
-│   └── melanoma_train_for_colab.zip   ← imágenes mel para entrenamiento TI
-├── synthetic/
-│   ├── textual_inversion/             ← ~4 500 imágenes TI  (*.jpg)
-│   ├── img2img/                       ← ~2 400 imágenes img2img  (*.jpg)
-│   ├── lora/                          ← imágenes LoRA  (*.jpg)
-│   ├── gan_final/                     ← imágenes WGAN-GP  (*.png)
-│   ├── derm_s040/                     ← Derm-T2IM strength=0.40  (*.jpg)
-│   └── derm_s005/                     ← Derm-T2IM strength=0.05  (*.jpg)
+│   ├── melanoma_train_for_colab.zip   ← imágenes mel para entrenamiento TI
+│   └── synthetic/
+│       ├── textual_inversion/         ← ~4 500 imágenes TI  (*.jpg)
+│       ├── img2img/                   ← ~2 400 imágenes img2img  (*.jpg)
+│       ├── lora/                      ← imágenes LoRA  (*.jpg)
+│       ├── gan_final/                 ← imágenes WGAN-GP  (*.png)
+│       ├── derm_s040/                 ← Derm-T2IM strength=0.40  (*.jpg)
+│       └── derm_s005/                 ← Derm-T2IM strength=0.05  (*.jpg)
 ├── models/
 │   └── mel_skin_embedding_final.pt    ← embedding Textual Inversion
 └── experiments/
