@@ -123,16 +123,24 @@ Se exploraron cuatro estrategias de síntesis de imágenes dermoscópicas de mel
   - Epochs: 15 | LR: 1e-4 | Scheduler: CosineAnnealingLR
   - Batch size: 32 | Optimizer: Adam | Semilla: 42
   - WeightedRandomSampler para compensar desbalance residual
-- **Notebook:** `HAM10000_classification_final.ipynb`
+- **Notebook:** `HAM10000_classification_comparative.ipynb`
 
 ### 4.3 Escenarios experimentales
 
-| Escenario | Train mel | Descripción |
-|---|---|---|
-| `real_only` | ~801 reales | Baseline sin augmentación sintética |
-| `real_2x` | ~801 real + ~800 sint. | Duplica la minoría con sintéticas |
-| `real_balanced` | ~801 real + ~3,900 sint. | Iguala la distribución mel ≈ nv |
-| `synthetic_only` | ~800 sint. (reemplaza reales) | Evalúa si las sintéticas pueden sustituir reales |
+El diseño compara cuatro métodos generativos bajo el mismo volumen de augmentación (**2×**: tantas sintéticas como reales de melanoma, ~801). Esto hace los resultados comparables entre generadores sin confundir el efecto del volumen con el del método. El escenario `synthetic_only_ti` se incluye como ablación para evaluar si las imágenes sintéticas pueden sustituir completamente a las reales, siguiendo el diseño de Akrout et al. (2023).
+
+| Escenario | Train melanoma | Método generativo | Pregunta central |
+|---|---|---|---|
+| `real_only` | 801 reales | — | Baseline sin augmentación |
+| `real_2x_ti` | 801 real + 801 TI | Textual Inversion (SD v1.5) | ¿TI mejora el Recall de melanoma? |
+| `real_2x_lora` | 801 real + 801 LoRA | LoRA fine-tuning (SD v1.5) | ¿LoRA supera a TI? |
+| `real_2x_gan` | 801 real + 801 GAN | WGAN-GP 64×64 px | ¿Una GAN clásica es competitiva con SD? |
+| `real_2x_derm` | 801 real + 801 Derm | Derm-T2IM img2img (s=0.40) | ¿Un modelo dermoscopy-specific reduce el distributional shift? |
+| `synthetic_only_ti` | 801 TI (sin reales) | Textual Inversion | ¿Las sintéticas pueden sustituir a las reales? |
+
+**Control de cantidad:** todos los escenarios `real_2x_*` usan exactamente `N_REAL_MEL` ≈ 801 imágenes sintéticas. El test set es siempre 100% real (159 mel / 1,012 nv).
+
+> Diseño inspirado en: Akrout et al. (2023). *Diffusion-based Data Augmentation for Skin Disease Classification*. arXiv:2301.04802
 
 ---
 
