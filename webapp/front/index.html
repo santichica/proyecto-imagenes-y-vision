@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>GAN Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<nav class="navbar">
+  <h2 class="logo">GAN App</h2>
+  <ul>
+    <li class="active" onclick="showSection('generator')">
+      Generación de imágenes
+    </li>
+    <li onclick="showSection('results')">
+      Resultados comparativos
+    </li>
+  </ul>
+</nav>
+
+<div id="generator" class="section active">
+  <div class="container">
+    <h1>GAN Image Generator</h1>
+    <p class="subtitle">Genera imágenes para combatir el desbalanceo</p>
+
+    <div class="controls">
+      <input type="number" id="num" placeholder="Cantidad de imágenes" />
+      <button onclick="generate()">Generar</button>
+    </div>
+
+    <button id="downloadBtn" class="download-btn hidden" onclick="downloadImages()">
+      Descargar imágenes
+    </button>
+
+    <div id="loading" class="loading-overlay hidden">
+      <div class="spinner"></div>
+      <p>Generando imágenes...</p>
+    </div>
+
+    <div id="images" class="grid"></div>
+  </div>
+</div>
+
+<div id="results" class="section">
+  <div class="container">
+    <h1>Resultados comparativos</h1>
+    <p class="subtitle">FID por modelo</p>
+
+    <div class="chart-container">
+      <canvas id="fidChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- LIB PARA ZIP -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
