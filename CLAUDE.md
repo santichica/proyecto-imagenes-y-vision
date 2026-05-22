@@ -33,38 +33,43 @@ This repository supports a research project on binary skin lesion classification
 
 ### Phase 2 — Generación sintética ✅ Completada (imágenes en Drive)
 - **Textual Inversion**: token `<mel-skin>` entrenado con 5 000 steps sobre ~800 imágenes de melanoma
-  - Notebook: `HAM10000_textual_inversion.ipynb`
-  - Embedding en Drive: `models/mel_skin_embedding_final.pt`
-- **Generación** ejecutada en Colab T4 (`runwayml/stable-diffusion-v1-5`):
-  - TI: 4 500 imágenes sintéticas
+  - Notebook: `notebooks/generation/HAM10000_textual_inversion.ipynb`
+  - Embedding en Drive: `ham10000-augmentation/models/mel_skin_embedding_final.pt`
+- **Generación SD** ejecutada en Colab T4 (`runwayml/stable-diffusion-v1-5`):
+  - TI: ~4 500 imágenes — `notebooks/generation/HAM10000_generation.ipynb`
   - Img2Img: ~2 400 variaciones de reales
-  - Notebook: `HAM10000_generation.ipynb`
-- **Pendiente**: descargar `synthetic/` de Drive → `data/synthetic/` (decidir si se entrena en Colab o local primero)
+  - LoRA (rank=32): `notebooks/generation/HAM10000_lora_training.ipynb`
+  - Derm-T2IM (img2img dermoscopy-specific, s=0.40): `notebooks/generation/HAM10000_derm_generation.ipynb`
+- **WGAN-GP**: 100 epochs, imágenes 64×64 — `GAN/HAM10000_GAN.ipynb`, pesos en `GAN/checkpoints/generator_final.h5`
+- Imágenes en Drive: `ham10000-augmentation/synthetic/{textual_inversion,img2img,lora,gan_final,derm_s040,derm_s005}/`
 
-### Phase 3 — Filtrado de calidad sintética ⬜ Pendiente
-- Filtro piel/no-piel sobre las imágenes generadas
-- Métricas FID / IS para cuantificar calidad
-- Guardar parámetros de filtrado en metadata
+### Phase 3 — Evaluación de calidad sintética ✅ Completada
+- Métricas FID e Inception Score por generador
+- Script: `scripts/augmentation/evaluate_generation.py`
+- Notebook: `HAM10000_quality_evaluation.ipynb`
 
-### Phase 4 — Clasificación comparativa ⬜ Pendiente
+### Phase 4 — Clasificación comparativa 🔄 En curso (Colab)
 - Modelo: EfficientNet-B0 (15 epochs, lr=1e-4, CosineAnnealingLR, WeightedRandomSampler)
-- Notebook: `HAM10000_classification.ipynb` (Colab + local, resumible por sesión)
-- Script de preparación de datos: `scripts/augmentation/prepare_for_colab_classification.py`
+- Notebook canónico: `HAM10000_classification_comparative.ipynb`
+- Diseño: comparar 4 generadores con volumen fijo 2× (N_REAL_MEL ≈ 801 sintéticas)
 - Escenarios:
-  | Escenario | Train mel | Estado |
-  |---|---|---|
-  | `real_only` | ~800 reales | ✅ baseline local: AUC 0.926 / Recall 0.843 / F1 0.604 |
-  | `real_balanced` | 800 real + ~3900 sint. (mel ≈ nv) | ⬜ pendiente |
-  | `real_2x` | 800 real + 800 sint. (dobla minoría) | ⬜ pendiente |
-  | `synthetic_only` | ~800 sint. (reemplaza real mel) | ⬜ pendiente |
-- El test set es siempre solo imágenes reales
-- Resultados del baseline local: `experiments/20260426_204545_real_only/`
-- Resultados de Colab irán a Drive: `experiments/<scenario>/`
+  | Escenario | Train mel | Generador | Estado |
+  |---|---|---|---|
+  | `real_only` | 801 reales | — | ✅ AUC 0.926 / Recall 0.843 / F1 0.604 |
+  | `real_2x_ti` | 801 real + 801 TI | Textual Inversion | 🔄 corriendo |
+  | `real_2x_lora` | 801 real + 801 LoRA | LoRA SD v1.5 | 🔄 corriendo |
+  | `real_2x_gan` | 801 real + 801 GAN | WGAN-GP | 🔄 corriendo |
+  | `real_2x_derm` | 801 real + 801 Derm | Derm-T2IM (s=0.40) | 🔄 corriendo |
+  | `synthetic_only_ti` | 801 TI (sin reales) | Textual Inversion | 🔄 corriendo |
+- Test set siempre 100% real (159 mel / 1 012 nv)
+- Baseline local: `experiments/20260426_204545_real_only/`
+- Resultados Colab en Drive: `ham10000-augmentation/experiments/`
 
-### Exploración paralela (rama `gabriel_develop`)
-- WGAN-GP en TensorFlow/Keras, imágenes 64×64, 100 epochs completados
-- No persiste pesos ni imágenes generadas — requiere reentrenar si se usa
+### Phase 5 — Webapp de generación ✅ Integrada
+- Backend FastAPI + frontend HTML/JS: `webapp/`
+- Modelo serializado: `webapp/backend/models/generator_final.h5` (WGAN-GP)
 - Entorno separado: `conda create -n gan-tf python=3.10 tensorflow==2.15.0`
+- Ver instrucciones: `webapp/backend/README.md`
 
 ## Convenciones de experimentos
 - Cada run guarda: `config.json`, `test_metrics.json`, `history.json`, `best_model.pt`, curvas y matriz de confusión

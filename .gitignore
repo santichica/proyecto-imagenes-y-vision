@@ -34,3 +34,10 @@ logs/
 # Editor and OS files
 .DS_Store
 .vscode/
+
+# Webapp runtime
+webapp/generated_by_user/
+
+# Artefactos de descarga de Drive (ZIPs temporales)
+*.zip
+*.Zone.Identifier
