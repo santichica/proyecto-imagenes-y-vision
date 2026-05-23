@@ -53,6 +53,7 @@ _EVAL_TF = transforms.Compose([
     ),
 ])
 
+# --- Clasificador LORA ----
 classifier_model = timm.create_model(
     'efficientnet_b0',
     pretrained=False,
@@ -65,8 +66,37 @@ classifier_model.load_state_dict(
 
 classifier_model.eval()
 
+print(f"✅ Clasificador (LORA) cargado exitosamente")
 
+# --- Clasificador REAL ----
+classifier_model_real = timm.create_model(
+    'efficientnet_b0',
+    pretrained=False,
+    num_classes=2
+)
 
+classifier_model_real.load_state_dict(
+    torch.load("models/best_model_real.pt", map_location="cpu")
+)
+
+classifier_model_real.eval()
+
+print(f"✅ Clasificador (REAL) cargado exitosamente")
+
+# --- Clasificador GAN ----
+classifier_model_gan = timm.create_model(
+    'efficientnet_b0',
+    pretrained=False,
+    num_classes=2
+)
+
+classifier_model_gan.load_state_dict(
+    torch.load("models/best_model_GAN.pt", map_location="cpu")
+)
+
+classifier_model_gan.eval()
+
+print(f"✅ Clasificador (GAN) cargado exitosamente")
 
 def generate_images(num_images):
     paths = []
@@ -111,6 +141,38 @@ async def classify(file: UploadFile = File(...)):
 
     with torch.no_grad():
         probs = torch.softmax(classifier_model(x), dim=1)[0]
+
+    return {
+        "label": "melanoma" if probs[1] > probs[0] else "nevus",
+        "prob_mel": round(float(probs[1]), 4),
+        "prob_nv": round(float(probs[0]), 4),
+    }
+    
+@app.post("/api/real/classify")
+async def classify(file: UploadFile = File(...)):
+    contents = await file.read()
+
+    img = Image.open(io.BytesIO(contents)).convert("RGB")
+    x = _EVAL_TF(img).unsqueeze(0)
+
+    with torch.no_grad():
+        probs = torch.softmax(classifier_model_real(x), dim=1)[0]
+
+    return {
+        "label": "melanoma" if probs[1] > probs[0] else "nevus",
+        "prob_mel": round(float(probs[1]), 4),
+        "prob_nv": round(float(probs[0]), 4),
+    }
+    
+@app.post("/api/gan/classify")
+async def classify(file: UploadFile = File(...)):
+    contents = await file.read()
+
+    img = Image.open(io.BytesIO(contents)).convert("RGB")
+    x = _EVAL_TF(img).unsqueeze(0)
+
+    with torch.no_grad():
+        probs = torch.softmax(classifier_model_gan(x), dim=1)[0]
 
     return {
         "label": "melanoma" if probs[1] > probs[0] else "nevus",

@@ -56,11 +56,61 @@
 <div id="classification" class="section">
   <div class="container">
     <h1>Clasificación de imágenes</h1>
-    <p class="subtitle">LORA: Sube una imagen para clasificar melanoma vs nevus</p>
+    <p class="subtitle">Imagenes sinteticas con LORA: Sube una imagen para clasificar melanoma vs nevus</p>
 
     <div class="upload-box">
       <input type="file" id="imageInput" accept="image/*">
       <button onclick="classifyImage()">Clasificar</button>
+    </div>
+
+    <div id="classificationResult" class="result-card hidden">
+      <h2 id="resultLabel"></h2>
+      <div class="probabilities">
+        <div>
+          <span>Melanoma</span>
+          <div class="bar">
+            <div id="barMel" class="bar-fill"></div>
+          </div>
+        </div>
+        <div>
+          <span>Nevus</span>
+          <div class="bar">
+            <div id="barNevus" class="bar-fill"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="subtitle">Con imagenes REALES: Sube una imagen para clasificar melanoma vs nevus</p>
+
+    <div class="upload-box">
+      <input type="file" id="imageInputReal" accept="image/*">
+      <button onclick="classifyImageReal()">Clasificar</button>
+    </div>
+
+    <div id="classificationResult" class="result-card hidden">
+      <h2 id="resultLabel"></h2>
+      <div class="probabilities">
+        <div>
+          <span>Melanoma</span>
+          <div class="bar">
+            <div id="barMel" class="bar-fill"></div>
+          </div>
+        </div>
+        <div>
+          <span>Nevus</span>
+          <div class="bar">
+            <div id="barNevus" class="bar-fill"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="subtitle">Imagenes sinteticas con GAN: Sube una imagen para clasificar melanoma vs nevus</p>
+
+    <div class="upload-box">
+      <input type="file" id="imageInputGAN" accept="image/*">
+      <button onclick="classifyImageGAN()">Clasificar</button>
     </div>
 
     <div id="classificationResult" class="result-card hidden">
