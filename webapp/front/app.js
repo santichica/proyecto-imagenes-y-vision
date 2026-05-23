@@ -124,3 +124,48 @@ function createChart() {
         }
     });
 }
+
+// 🔥 CLASIFICAR IMAGEN
+async function classifyImage() {
+    console.log("FUNCION CARGADA");
+    const fileInput = document.getElementById("imageInput");
+    const file = fileInput.files[0];
+
+    if (!file) {
+        alert("Selecciona una imagen");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+        const res = await fetch(`${API_URL}/api/lora/classify`, {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await res.json();
+
+        const resultBox = document.getElementById("classificationResult");
+        const label = document.getElementById("resultLabel");
+        const barMel = document.getElementById("barMel");
+        const barNevus = document.getElementById("barNevus");
+
+        resultBox.classList.remove("hidden");
+
+        const probMel = (data.prob_mel * 100).toFixed(2);
+        const probNev = (data.prob_nv * 100).toFixed(2);
+
+        label.innerText = data.label === "melanoma"
+            ? `Posible Melanoma (${probMel}%)`
+            : `Nevus (Benigno) (${probNev}%)`;
+
+        barMel.style.width = `${data.prob_mel * 100}%`;
+        barNevus.style.width = `${data.prob_nv * 100}%`;
+
+    } catch (err) {
+        console.error(err);
+        alert("Error clasificando imagen");
+    }
+}

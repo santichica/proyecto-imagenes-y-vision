@@ -220,3 +220,50 @@ button:hover {
 .download-btn:hover {
   transform: scale(1.05);
 }
+
+/* UPLOAD */
+.upload-box {
+  margin-top: 20px;
+}
+
+.upload-box input {
+  margin-bottom: 15px;
+}
+
+/* RESULT CARD */
+.result-card {
+  margin-top: 30px;
+  background: rgba(0,0,0,0.4);
+  padding: 25px;
+  border-radius: 16px;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+
+.result-card h2 {
+  margin-bottom: 20px;
+}
+
+/* PROB BARS */
+.probabilities {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.bar {
+  width: 100%;
+  height: 12px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00ff99, #00ccff);
+  width: 0%;
+  transition: width 0.5s ease;
+}

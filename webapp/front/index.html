@@ -10,15 +10,13 @@
 <nav class="navbar">
   <h2 class="logo">GAN App</h2>
   <ul>
-    <li class="active" onclick="showSection('generator')">
-      Generación de imágenes
-    </li>
-    <li onclick="showSection('results')">
-      Resultados comparativos
-    </li>
+    <li class="active" onclick="showSection('generator')">Generación de imágenes</li>
+    <li onclick="showSection('results')">Resultados comparativos</li>
+    <li onclick="showSection('classification')">Clasificaciones</li>
   </ul>
 </nav>
 
+<!-- GENERADOR -->
 <div id="generator" class="section active">
   <div class="container">
     <h1>GAN Image Generator</h1>
@@ -42,6 +40,7 @@
   </div>
 </div>
 
+<!-- RESULTADOS -->
 <div id="results" class="section">
   <div class="container">
     <h1>Resultados comparativos</h1>
@@ -53,7 +52,38 @@
   </div>
 </div>
 
-<!-- LIB PARA ZIP -->
+<!-- CLASIFICACIÓN -->
+<div id="classification" class="section">
+  <div class="container">
+    <h1>Clasificación de imágenes</h1>
+    <p class="subtitle">LORA: Sube una imagen para clasificar melanoma vs nevus</p>
+
+    <div class="upload-box">
+      <input type="file" id="imageInput" accept="image/*">
+      <button onclick="classifyImage()">Clasificar</button>
+    </div>
+
+    <div id="classificationResult" class="result-card hidden">
+      <h2 id="resultLabel"></h2>
+      <div class="probabilities">
+        <div>
+          <span>Melanoma</span>
+          <div class="bar">
+            <div id="barMel" class="bar-fill"></div>
+          </div>
+        </div>
+        <div>
+          <span>Nevus</span>
+          <div class="bar">
+            <div id="barNevus" class="bar-fill"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="app.js"></script>

@@ -102,7 +102,7 @@ def generate(num_images: int = 5):
     paths = generate_images(num_images)
     return {"images": paths}
 
-@app.post("/api/classify")
+@app.post("/api/lora/classify")
 async def classify(file: UploadFile = File(...)):
     contents = await file.read()
 
