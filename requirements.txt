@@ -1,0 +1,47 @@
+# HAM10000 Synthetic Augmentation — entorno principal
+# Python 3.11 | CUDA 13.0
+#
+# Instalación:
+#   conda create -n ham10000-augmentation python=3.11 -y
+#   conda activate ham10000-augmentation
+#   pip install -r requirements.txt
+#
+# Nota: torch y torchvision requieren el índice de PyTorch CUDA 13.0.
+# Se instalan primero para evitar conflictos de dependencias.
+#
+#   pip install torch==2.11.0+cu130 torchvision \
+#       --index-url https://download.pytorch.org/whl/cu130
+#   pip install -r requirements.txt
+
+# ── Datos y utilidades ────────────────────────────────────────────────────────
+numpy
+pandas
+scikit-learn
+Pillow
+PyYAML
+python-dotenv
+
+# ── Visualización ─────────────────────────────────────────────────────────────
+matplotlib
+seaborn
+
+# ── Deep learning ─────────────────────────────────────────────────────────────
+# torch y torchvision se instalan por separado (ver nota arriba)
+timm
+torchmetrics[image]
+
+# ── Stable Diffusion / generación ────────────────────────────────────────────
+diffusers
+transformers
+accelerate
+safetensors
+
+# ── Evaluación de calidad sintética (FID, Inception Score) ───────────────────
+torch-fidelity
+opencv-python
+
+# ── Jupyter y desarrollo ──────────────────────────────────────────────────────
+jupyterlab
+ipykernel
+tqdm
+pytest
