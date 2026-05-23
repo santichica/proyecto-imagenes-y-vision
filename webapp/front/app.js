@@ -1,4 +1,4 @@
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = window.location.origin;
 
 let chart = null;
 let generatedImages = [];
@@ -17,7 +17,7 @@ async function generate() {
     downloadBtn.classList.add("hidden");
 
     try {
-        const res = await fetch(`${API_URL}/generate?num_images=${num}`);
+        const res = await fetch(`${API_URL}/api/generate?num_images=${num}`);
         const data = await res.json();
 
         loading.classList.add("hidden");

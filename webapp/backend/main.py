@@ -28,7 +28,7 @@ LATENT_DIM = 100
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-app.mount("/", StaticFiles(directory=os.path.join(BASE_DIR, "front"), html=True), name="static")
+app.mount("/app", StaticFiles(directory=os.path.join(BASE_DIR, "front"), html=True), name="static")
 
 model_path = os.path.join(os.path.dirname(__file__), "models", "generator_final.h5")
 
@@ -64,11 +64,11 @@ def generate_images(num_images):
 
     return paths
 
-@app.get("/health")
+@app.get("/api/health")
 def health_check():
     return {"status": "GAN ready to generate"}
 
-@app.get("/generate")
+@app.get("/api/generate")
 def generate(num_images: int = 5):
     paths = generate_images(num_images)
     return {"images": paths}
