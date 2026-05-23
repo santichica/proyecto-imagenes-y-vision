@@ -28,6 +28,8 @@ LATENT_DIM = 100
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+app.mount("/", StaticFiles(directory=os.path.join(BASE_DIR, "front"), html=True), name="static")
+
 model_path = os.path.join(os.path.dirname(__file__), "models", "generator_final.h5")
 
 generator = tf.keras.models.load_model(model_path, compile=False)
