@@ -2,6 +2,7 @@ const API_URL = window.location.origin;
 
 let chart = null;
 let generatedImages = [];
+let recallChart = null;
 
 // GENERAR IMÁGENES
 async function generate() {
@@ -80,7 +81,10 @@ function showSection(sectionId) {
     if (sectionId === "results") navItems[1].classList.add("active");
 
     if (sectionId === "results") {
-        setTimeout(createChart, 100);
+        setTimeout(() => {
+            createChart();
+            createRecallChart();
+        }, 100);
     }
 }
 
@@ -256,4 +260,67 @@ async function classifyImageGAN() {
         console.error(err);
         alert("Error clasificando imagen");
     }
+}
+
+function createRecallChart() {
+    const ctx = document.getElementById('recallChart');
+
+    if (!ctx) return;
+
+    if (recallChart) recallChart.destroy();
+
+    const labels = [
+        "Baseline Real",
+        "Híbrido TI",
+        "Híbrido LoRA",
+        "Híbrido GAN",
+        "Derm s040",
+        "Sint TI",
+        "Sint LoRA",
+        "Sint GAN",
+        "Derm s005"
+    ];
+
+    const values = [
+        0.528,
+        0.585,
+        0.535,
+        0.579,
+        0.604,
+        0.000,
+        0.006,
+        0.006,
+        0.478
+    ];
+
+    recallChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Recall Melanoma (mayor es mejor)',
+                data: values,
+                backgroundColor: values.map(v => {
+                    if (v > 0.6) return "#00ff99";
+                    if (v > 0.5) return "#ffd166";
+                    return "#ef476f";
+                })
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { labels: { color: "white" } }
+            },
+            scales: {
+                x: { ticks: { color: "white" } },
+                y: {
+                    ticks: { color: "white" },
+                    min: 0,
+                    max: 1
+                }
+            }
+        }
+    });
 }
