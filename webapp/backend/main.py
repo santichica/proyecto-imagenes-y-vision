@@ -53,7 +53,7 @@ _EVAL_TF = transforms.Compose([
     ),
 ])
 
-# --- Clasificador LORA ----
+# --- Clasificador Derm-T2IM ----
 classifier_model = timm.create_model(
     'efficientnet_b0',
     pretrained=False,
@@ -61,12 +61,12 @@ classifier_model = timm.create_model(
 )
 
 classifier_model.load_state_dict(
-    torch.load("models/best_model_lora.pt", map_location="cpu")
+    torch.load("models/best_model_Derm-T2IM.pt", map_location="cpu")
 )
 
 classifier_model.eval()
 
-print(f"✅ Clasificador (LORA) cargado exitosamente")
+print(f"✅ Clasificador (Derm-T2IM) cargado exitosamente")
 
 # --- Clasificador REAL ----
 classifier_model_real = timm.create_model(
@@ -132,10 +132,10 @@ def generate(num_images: int = 5):
     paths = generate_images(num_images)
     return {"images": paths}
 
-@app.post("/api/lora/classify")
+@app.post("/api/derm/classify")
 async def classify(file: UploadFile = File(...)):
     contents = await file.read()
-
+    
     img = Image.open(io.BytesIO(contents)).convert("RGB")
     x = _EVAL_TF(img).unsqueeze(0)
 

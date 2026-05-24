@@ -140,7 +140,7 @@ async function classifyImage() {
     formData.append("file", file);
 
     try {
-        const res = await fetch(`${API_URL}/api/lora/classify`, {
+        const res = await fetch(`${API_URL}/api/derm/classify`, {
             method: "POST",
             body: formData
         });
