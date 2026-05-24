@@ -91,28 +91,33 @@ function showSection(sectionId) {
 // GRÁFICA
 function createChart() {
     const ctx = document.getElementById('fidChart');
-
     if (!ctx) return;
 
     if (chart) chart.destroy();
 
-    const models = ["LoRA", "LoRA NEW", "img2img", "GAN", "GAN NEW"];
-    const fidValues = [155.0089, 155.0089, 53.2477, 254.8915, 199.1471];
+    const data = [
+        { generador: "TI", fid: 272.87 },
+        { generador: "GAN", fid: 220.77 },
+        { generador: "LoRA", fid: 121.71 },
+        { generador: "Derm s=0.40", fid: 46.69 },
+        { generador: "Derm s=0.05", fid: 21.09 }
+    ];
 
-    const colors = fidValues.map(v => {
-        if (v < 80) return "#00ff99";
-        if (v < 150) return "#ffd166";
-        return "#ef476f";
-    });
+    const labels = data.map(d => d.generador);
+    const values = data.map(d => d.fid);
 
     chart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: models,
+            labels,
             datasets: [{
-                label: 'FID (menor es mejor)',
-                data: fidValues,
-                backgroundColor: colors
+                label: 'FID',
+                data: values,
+                backgroundColor: values.map(v => {
+                    if (v < 50) return "#00ff99";
+                    if (v < 150) return "#ffd166";
+                    return "#ef476f";
+                })
             }]
         },
         options: {
@@ -129,7 +134,7 @@ function createChart() {
     });
 }
 
-// 🔥 CLASIFICAR IMAGEN
+// CLASIFICAR IMAGEN
 async function classifyImage() {
     console.log("FUNCION CARGADA");
     const fileInput = document.getElementById("imageInput");
@@ -264,41 +269,42 @@ async function classifyImageGAN() {
 
 function createRecallChart() {
     const ctx = document.getElementById('recallChart');
-
     if (!ctx) return;
 
     if (recallChart) recallChart.destroy();
 
-    const labels = [
-        "Baseline Real",
-        "Híbrido TI",
-        "Híbrido LoRA",
-        "Híbrido GAN",
-        "Derm s040",
-        "Sint TI",
-        "Sint LoRA",
-        "Sint GAN",
-        "Derm s005"
+    const baseline = 0.5283;
+
+    const hybrid = [
+        { generador: "TI", recall: 0.5849 },
+        { generador: "LoRA", recall: 0.5346 },
+        { generador: "GAN", recall: 0.5786 },
+        { generador: "Derm s=0.40", recall: 0.6038 },
+        { generador: "Derm s=0.05", recall: 0.6101 }
     ];
 
+    const synthetic = [
+        { generador: "TI", recall: 0.0000 },
+        { generador: "LoRA", recall: 0.0063 },
+        { generador: "GAN", recall: 0.0063 },
+        { generador: "Derm s=0.40", recall: 0.1447 },
+        { generador: "Derm s=0.05", recall: 0.4780 }
+    ];
+
+    const labels = ["Baseline", ...hybrid.map(h => "H-" + h.generador), ...synthetic.map(s => "S-" + s.generador)];
+
     const values = [
-        0.528,
-        0.585,
-        0.535,
-        0.579,
-        0.604,
-        0.000,
-        0.006,
-        0.006,
-        0.478
+        baseline,
+        ...hybrid.map(h => h.recall),
+        ...synthetic.map(s => s.recall)
     ];
 
     recallChart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: labels,
+            labels,
             datasets: [{
-                label: 'Recall Melanoma (mayor es mejor)',
+                label: 'Recall Melanoma',
                 data: values,
                 backgroundColor: values.map(v => {
                     if (v > 0.6) return "#00ff99";
@@ -316,9 +322,9 @@ function createRecallChart() {
             scales: {
                 x: { ticks: { color: "white" } },
                 y: {
-                    ticks: { color: "white" },
                     min: 0,
-                    max: 1
+                    max: 1,
+                    ticks: { color: "white" }
                 }
             }
         }
