@@ -97,23 +97,45 @@ Ver diseño metodológico completo en [METHODOLOGY.md](METHODOLOGY.md).
 
 ---
 
-## Estructura de Drive (Colab)
+## Estructura del repositorio
 
 ```
-ham10000-augmentation/
+proyecto-imagenes-y-vision/
+├── HAM10000_classification_comparative.ipynb  ← notebook principal (11 escenarios)
+├── HAM10000_quality_evaluation.ipynb          ← FID e IS por generador
+├── HAM10000_paper_figures.ipynb               ← figuras para el artículo
+├── GAN/
+│   ├── HAM10000_GAN.ipynb                     ← entrenamiento WGAN-GP
+│   └── checkpoints/generator_final.h5         ← pesos del generador
+├── notebooks/
+│   ├── generation/
+│   │   ├── HAM10000_textual_inversion.ipynb   ← entrenamiento token TI
+│   │   ├── HAM10000_generation.ipynb          ← generación SD (TI + img2img)
+│   │   ├── HAM10000_lora_training.ipynb       ← fine-tuning LoRA
+│   │   └── HAM10000_derm_generation.ipynb     ← generación Derm-T2IM
+│   ├── experiments/                           ← versiones previas del clasificador
+│   └── exploration/                           ← EDA y baseline exploratorio
+├── scripts/
+│   ├── data_processing/
+│   │   ├── 01_extract.py                      ← extracción de imágenes HAM10000
+│   │   └── 02_split.py                        ← split lesion-aware 70/15/15
+│   ├── augmentation/
+│   │   └── evaluate_generation.py             ← cálculo de FID e IS
+│   └── training/                              ← dataset.py, model.py, train.py
 ├── data/
-│   └── classification_data.zip
-├── synthetic/
-│   ├── textual_inversion/   ← ~4 500 imágenes (*.jpg)
-│   ├── lora/                ← ~4 500 imágenes (*.jpg)
-│   ├── gan_final/           ← 5 000 imágenes (*.png)
-│   ├── derm_s040/           ← ~2 400 imágenes (*.jpg)
-│   └── derm_s005/           ← ~1 600 imágenes (*.jpg)
-├── models/
-│   └── mel_skin_embedding_final.pt
-└── experiments/
-    └── YYYYMMDD_HHMMSS_<escenario>/
+│   ├── processed/                             ← splits CSV + classification_data.zip
+│   └── synthetic/                             ← imágenes sintéticas locales
+├── reports/                                   ← figuras y métricas de calidad
+├── config/project.yaml                        ← rutas y parámetros globales
+├── webapp/
+│   ├── backend/                               ← FastAPI (GAN + clasificador)
+│   └── front/                                 ← interfaz HTML/JS
+├── tests/test_split_leakage.py
+├── environment.yml
+└── requirements.txt
 ```
+
+Los datos completos (imágenes sintéticas, modelos entrenados, runs de experimentos) están en [Google Drive](https://drive.google.com/drive/folders/1dAEHEQwjZaMYovx--IB0l727m25F_FRV?usp=drive_link).
 
 ---
 

@@ -50,7 +50,6 @@ This repository supports a research project on binary skin lesion classification
 
 ### Phase 4 — Clasificación comparativa 🔄 En curso (Colab)
 - Modelo: EfficientNet-B0 (15 epochs, lr=1e-4, AdamW, CosineAnnealingLR, seed=42)
-- **Sin WeightedRandomSampler** — desbalanceo atacado únicamente con datos sintéticos
 - Checkpoint criterion: mejor val_loss
 - Notebook canónico: `HAM10000_classification_comparative.ipynb`
 - Diseño: comparar 5 generadores con volumen fijo 2× (N_REAL_MEL ≈ 801 sintéticas)
