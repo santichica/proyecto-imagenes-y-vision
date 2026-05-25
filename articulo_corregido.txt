@@ -1,0 +1,831 @@
+\documentclass[journal]{IEEEtran}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\addto\captionsspanish{\renewcommand{\tablename}{Tabla}}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{cite}
+\usepackage{url}
+\usepackage{array}
+\usepackage[caption=false]{subfig}
+
+
+\begin{document}
+
+\title{Aumento de datos sintéticos con modelos generativos para mitigar el
+  desbalanceo de clases en la detección de melanoma dermoscópico}
+
+\author{Santiago~Chica, Gabriel~Gómez, Michael~Patiño, Juan~Diego~Sarmiento%
+\thanks{Universidad de los Andes, Bogotá, Colombia. Correo: j.sarmiento@uniandes.edu.co}}
+
+\markboth{Imágenes y Visión, Universidad de los Andes, 2026}%
+{Chica \MakeLowercase{\textit{et al.}}: Generación de datos sintéticos mediante Stable Diffusion}
+
+\maketitle
+
+\begin{abstract}
+El desbalanceo de clases es un obstáculo central en la clasificación de
+imágenes dermatológicas: patologías como el melanoma están
+escasamente representadas en los conjuntos de datos disponibles, lo que
+limita la sensibilidad de los modelos sobre la clase minoritaria. En este
+trabajo se evalúa el aumento de datos sintéticos como estrategia de
+rebalanceo, comparando cuatro métodos generativos: Textual Inversion,
+LoRA y Derm-T2IM sobre Stable Diffusion v1.5, y WGAN-GP. Utilizamos el
+conjunto HAM10000 para clasificación binaria nevus/melanoma como conjunto
+de datos para hacer la evaluación de los métodos generativos. Cada
+generador aporta 801 imágenes sintéticas de melanoma en escenarios
+híbridos (real + sintético) y exclusivamente sintético. Un clasificador
+EfficientNet-B0 se evalúa en todos los casos sobre un conjunto de prueba
+100\,\% real.
+
+El aumento de datos híbrido mejora el AUC del baseline (0.911) en todos los
+generadores, con WGAN-GP alcanzando 0.929 y Derm-T2IM $s=0.05$ registrando el
+mayor incremento en recall (+8.2\,pp). El entrenamiento exclusivamente
+con sintéticas colapsa en tres de los cuatro métodos (Recall\,$\approx$\,0),
+mientras que Derm-T2IM con perturbación mínima mantiene viabilidad
+(AUC\,=\,0.878). Los resultados indican que el domain shift entre
+imágenes sintéticas y reales es el factor determinante en la
+transferibilidad del clasificador, más que el método generativo en sí.
+\end{abstract}
+
+\begin{IEEEkeywords}
+melanoma, HAM10000, desbalanceo de clases, aumento de datos sintéticos,
+Stable Diffusion, modelos generativos, clasificación dermatológica
+\end{IEEEkeywords}
+
+\IEEEpeerreviewmaketitle
+
+\section{Introducción}
+
+\IEEEPARstart{E}{l} avance de las redes neuronales convolucionales ha
+impulsado el desarrollo de sistemas de diagnóstico dermatológico asistido
+con desempeño comparable al de especialistas clínicos en tareas de
+clasificación de imágenes~\cite{esteva2017}. El melanoma concentra gran parte de este
+interés: su alta capacidad metastásica contrasta con pronósticos
+favorables cuando se detecta de forma temprana, lo que convierte su
+detección automática en una herramienta de alto impacto, especialmente en
+regiones con acceso limitado a dermatólogos especializados. No obstante,
+el entrenamiento de modelos robustos exige grandes volúmenes de datos
+correctamente etiquetados y equilibrados entre clases diagnósticas, una
+condición que los conjuntos médicos disponibles rara vez satisfacen.
+
+El principal obstáculo es el marcado desbalanceo de clases. HAM10000~\cite{ham10000}
+contiene 10\,015 imágenes dermatoscópicas distribuidas en siete
+categorías; al filtrar el subconjunto binario nevus/melanoma utilizado en
+este trabajo se obtienen 7\,818 imágenes, de las cuales el 85.8\,\%
+corresponden a nevos (6\,705) y apenas el 14.2\,\% a melanoma (1\,113).
+Esta asimetría induce un sesgo sistemático hacia la clase mayoritaria,
+reduciendo la sensibilidad del modelo sobre las lesiones malignas que son las más críticas de detectar~\cite{ibrahim2024}.
+
+Las técnicas de aumento de datos convencionales (rotaciones, volteos,
+modificaciones de contraste, filtros) incrementan el recuento de muestras sin
+introducir variabilidad morfológica ni semántica nueva. Los modelos
+generativos profundos ofrecen una alternativa más rica: tanto las redes
+generativas antagónicas (GANs)~\cite{baur2018} como los modelos de difusión
+probabilística~\cite{rombach2022} pueden sintetizar imágenes con diversidad
+estructural controlada. Stable Diffusion~\cite{rombach2022}, en particular,
+habilita estrategias de ajuste fino orientadas a clases específicas: textual
+inversion~\cite{gal2022}, LoRA~\cite{dreambooth} y variantes dermoscópicas
+especializadas, que permiten generar muestras condicionadas por patología
+sin reentrenar el modelo completo.
+
+La utilidad de los datos sintéticos, sin embargo, no está garantizada por
+su realismo visual. Una imagen visualmente convincente puede introducir
+domain shift suficiente como para degradar el rendimiento del
+clasificador. Esto exige una evaluación en dos niveles: métricas
+estadísticas de distribución como Fréchet Inception Distance
+(FID)~\cite{heusel2017} e Inception Score (IS)~\cite{salimans2016} para
+cuantificar la calidad generativa, y validación directa sobre tareas de
+clasificación con conjuntos de prueba exclusivamente reales para medir el
+impacto efectivo~\cite{akrout2024}.
+
+En este trabajo se evalúa sistemáticamente el aumento de datos sintéticos como
+estrategia de rebalanceo para clasificación binaria nevus/melanoma sobre
+HAM10000. El conjunto se particiona de forma estratificada por
+identificador de lesión (70/15/15): 5\,476 imágenes de entrenamiento
+(801\,mel / 4\,675\,nv), 1\,171 de validación (153\,mel / 1\,018\,nv) y
+1\,171 de prueba (159\,mel / 1\,012\,nv). Se comparan cuatro métodos
+generativos: Textual Inversion~\cite{gal2022}, LoRA~\cite{dreambooth},
+Derm-T2IM \cite{farooq2024} y WGAN-GP~\cite{gulrajani2017}, bajo un protocolo de volumen
+fijo de 801 imágenes sintéticas de melanoma por generador, igualando la
+cantidad de melanomas reales disponibles en entrenamiento. Un clasificador
+EfficientNet-B0 se evalúa en once escenarios: baseline real, cinco
+configuraciones híbridas (real + sintético, 2×) y cinco exclusivamente
+sintéticas. El conjunto de prueba es siempre 100\,\% real.
+
+Las principales contribuciones de este trabajo son:
+\begin{itemize}
+    \item Comparación controlada de cuatro estrategias generativas:
+    Textual Inversion, LoRA, Derm-T2IM y WGAN-GP, manteniendo
+    volumen de aumento constante (801 imágenes por generador)
+    para hacer comparables los resultados entre métodos.
+    \item Evaluación en escenarios híbridos y exclusivamente sintéticos
+    con test set 100\,\% real, midiendo el impacto sobre la clase
+    minoritaria con AUC-ROC, Recall y F1-score de melanoma.
+    \item Análisis de la calidad generativa mediante FID e IS, y su
+    relación con el rendimiento del clasificador en cada escenario.
+    \item Evidencia de que el domain shift (medido por FID) determina
+    si el entrenamiento exclusivamente sintético es viable: el único
+    generador que evita el colapso del clasificador es Derm-T2IM,
+    que produce imágenes con menor distancia a la distribución real
+    (FID\,=\,21.1).
+\end{itemize}
+
+El resto del documento se organiza así: la Sección~II revisa el estado del
+arte, la Sección~III describe los materiales, la Sección~IV detalla la
+metodología, la Sección~V presenta los resultados, la Sección~VI discute
+los hallazgos y limitaciones, y la Sección~VII recoge las conclusiones.
+
+
+\section{Estado del Arte}
+
+\subsection{Clasificación de lesiones cutáneas con aprendizaje profundo}
+
+El uso de redes neuronales convolucionales para el diagnóstico dermatológico
+asistido tomó impulso con el trabajo de Esteva et al.~\cite{esteva2017}, que
+demostró que una CNN entrenada sobre 129\,450 imágenes clínicas alcanza un
+desempeño comparable al de dermatólogos certificados en la distinción entre
+melanoma maligno y nevos benignos. Desde entonces, arquitecturas más eficientes
+como EfficientNet~\cite{tan2019} se han consolidado como estándar en tareas de
+clasificación de imágenes médicas gracias a su escalado compuesto de
+profundidad, ancho y resolución. Sobre HAM10000, modelos preentrenados en
+ImageNet y ajustados sobre datos dermatoscópicos alcanzan regularmente AUC
+superiores a 0.90 en la tarea binaria nevus/melanoma, estableciendo la línea
+base sobre la que se mide el beneficio de cualquier estrategia de rebalanceo.
+
+\subsection{El problema del desbalanceo de clases}
+
+El principal obstáculo en la clasificación dermatológica no es la arquitectura
+del modelo sino la distribución asimétrica de los datos. En HAM10000, la clase
+mayoritaria (nevus) representa el 67\,\% del dataset completo y el 85.8\,\%
+del subconjunto binario nevus/melanoma. Un clasificador que ignora este
+desbalanceo tiende a optimizar la exactitud global prediciendo siempre la clase
+mayoritaria, lo que resulta en sensibilidad reducida sobre las lesiones malignas.
+
+Las estrategias más utilizadas para mitigar este problema son el sobremuestreo
+de la clase minoritaria y el submuestreo de la mayoritaria. SMOTE~\cite{chawla2002}
+genera muestras sintéticas interpolando en el espacio de características entre
+ejemplos reales de la clase minoritaria, y sigue siendo una de las técnicas más
+citadas. Sin embargo, en imágenes de alta dimensionalidad la interpolación en
+el espacio de píxeles produce artefactos visuales que no corresponden a
+variaciones morfológicas reales, limitando su utilidad en imágenes médicas.
+Las técnicas de coste sensible, que penalizan más los errores sobre la clase
+minoritaria, ofrecen una alternativa sin modificar los datos, pero no aportan
+diversidad morfológica al conjunto de entrenamiento.
+
+\subsection{GANs para síntesis de imágenes médicas}
+
+Las redes generativas antagónicas abrieron la posibilidad de generar imágenes
+sintéticas con diversidad estructural controlada. En dermatoscopia, Baur
+et al.~\cite{baur2018} proponen MelanoGANs, un sistema basado en GANs de alta
+resolución para sintetizar imágenes de melanoma, y demuestran que las muestras
+generadas son suficientemente realistas para ser indistinguibles de las reales
+en evaluaciones ciegas. No obstante, las GANs convencionales son propensas
+a inestabilidad durante el entrenamiento y al fenómeno de \textit{mode
+collapse}, en el que el generador produce una variedad limitada de imágenes.
+WGAN-GP~\cite{gulrajani2017} resuelve parte de estos problemas reemplazando el
+recorte de pesos del discriminador por una penalización de gradiente que
+estabiliza el entrenamiento sin restringir la capacidad representacional del
+modelo.
+
+\subsection{Modelos de difusión y estrategias de ajuste fino}
+
+Los modelos de difusión latente, y en particular Stable
+Diffusion~\cite{rombach2022}, superaron a las GANs en estabilidad de
+entrenamiento y calidad visual, al mismo tiempo que permiten generación
+condicionada por texto. Su arquitectura latente reduce el costo computacional
+al operar en un espacio comprimido en lugar de sobre los píxeles directamente.
+
+Sobre este modelo base se han desarrollado distintas estrategias de ajuste
+fino para clases específicas. Gal et al.~\cite{gal2022} proponen Textual
+Inversion, que aprende un nuevo token textual capaz de representar un concepto
+visual a partir de pocas imágenes de referencia, sin modificar los pesos del
+modelo. Ruiz et al.~\cite{dreambooth} proponen DreamBooth, que ajusta el
+modelo completo asociando un identificador único con la clase objetivo e
+incorpora una pérdida de preservación de prior para evitar el olvido
+catastrófico. Su variante con LoRA (\textit{Low-Rank Adaptation}) reduce el
+costo computacional adaptando únicamente matrices de bajo rango en las capas de
+atención, sin necesidad de modificar todos los parámetros del modelo.
+
+Farooq et al.~\cite{farooq2024} presentan Derm-T2IM, un modelo Stable
+Diffusion ajustado específicamente sobre imágenes dermatoscópicas de HAM10000
+e ISIC. A diferencia de los métodos anteriores, opera en modo imagen-a-imagen:
+toma una imagen real de melanoma como referencia y genera variaciones de ella
+mediante un parámetro de fuerza que controla el grado de modificación. Al
+estar ajustado sobre el mismo dominio dermatoscópico, produce imágenes con
+distribución más cercana a los datos reales que los modelos de propósito
+general.
+
+\subsection{Aumento de datos sintéticos en clasificación dermatológica}
+
+Varios trabajos han evaluado el impacto de los datos sintéticos en
+clasificadores entrenados sobre HAM10000. Akrout et al.~\cite{akrout2024}
+comparan clasificadores entrenados con proporciones crecientes de imágenes
+generadas por Stable Diffusion y concluyen que los conjuntos híbridos (real +
+sintético) mantienen desempeño competitivo frente al entrenamiento
+completamente real, mientras que el entrenamiento exclusivamente sintético
+degrada los resultados. Este trabajo constituye el antecedente más directo
+del presente estudio, pero no compara múltiples métodos generativos bajo un
+protocolo de volumen controlado.
+
+En un contexto más amplio, Ibrahim et al.~\cite{ibrahim2024} analizan el uso
+de IA generativa en múltiples modalidades clínicas y reportan mejoras
+consistentes en la detección de patologías poco representadas cuando se
+incorporan datos sintéticos. Chan et al.~\cite{chan2023} ofrecen una revisión
+comparativa de VAEs, GANs y modelos de difusión, destacando que la generación
+sintética aporta diversidad más allá del simple incremento de volumen. Rahat
+et al.~\cite{rahat2025} y Zhang et al.~\cite{zhang2025} refuerzan esta línea
+mostrando que los datos sintéticos son especialmente valiosos cuando la
+cantidad de datos reales es limitada, ya sea por escasez de anotaciones o por
+la rareza de la condición clínica.
+
+\subsection{Métricas de evaluación generativa}
+
+La evaluación de la calidad de imágenes sintéticas se apoya en dos métricas
+estándar. El Fréchet Inception Distance (FID)~\cite{heusel2017} compara las
+distribuciones de imágenes reales y generadas en el espacio de activaciones de
+Inception~v3: valores menores indican menor distancia distribucional y, en
+consecuencia, mayor similitud estadística con los datos reales. El Inception
+Score (IS)~\cite{salimans2016} mide simultáneamente calidad y diversidad
+mediante la distribución de predicciones de un clasificador sobre las imágenes
+generadas, aunque resulta menos sensible que el FID para detectar
+\textit{domain shift} o \textit{mode collapse} en datasets especializados.
+
+A diferencia de los trabajos anteriores, este estudio compara cuatro métodos
+generativos de forma controlada (volumen fijo, mismo clasificador, mismo test
+set exclusivamente real) sobre la tarea binaria nevus/melanoma en HAM10000,
+evaluando tanto calidad generativa como impacto directo en clasificación en
+escenarios híbridos y exclusivamente sintéticos.
+
+\section{Materiales}
+
+\subsection{Dataset HAM10000}
+
+El dataset utilizado es HAM10000 (Human Against Machine with 10000 training
+images)~\cite{ham10000}, un conjunto de datos dermatológicos compuesto por
+10\,015 imágenes dermatoscópicas RGB de lesiones cutáneas pertenecientes a
+siete categorías diagnósticas. Las imágenes tienen una resolución aproximada
+de $600 \times 450$ píxeles y provienen de distintas fuentes clínicas, lo que
+introduce variaciones en iluminación, contraste y condiciones de adquisición.
+
+Para este trabajo se define una tarea de clasificación binaria entre nevos
+melanocíticos (\textit{nv}) y melanoma (\textit{mel}), descartando las otras
+cinco categorías del dataset original. El subconjunto resultante contiene
+7\,818 imágenes: 6\,705 nevos (85.8\,\%) y 1\,113 melanomas (14.2\,\%).
+
+El dataset incluye múltiples imágenes de una misma lesión, lo que puede
+introducir \textit{data leakage} si la partición se hace por imagen. Por esta
+razón, la división se realiza a nivel de identificador de lesión
+(\texttt{lesion\_id}), garantizando que todas las imágenes de una misma lesión
+pertenezcan al mismo subconjunto. La partición estratificada (70/15/15) produce:
+5\,476 imágenes de entrenamiento (801\,mel / 4\,675\,nv),
+1\,171 de validación (153\,mel / 1\,018\,nv) y
+1\,171 de prueba (159\,mel / 1\,012\,nv).
+
+\subsection{Herramientas y entorno computacional}
+
+La implementación se desarrolla en Python con PyTorch como framework de
+aprendizaje profundo. Para la generación de imágenes sintéticas se emplea la
+librería Hugging Face Diffusers con el modelo base
+\texttt{runwayml/stable-diffusion-v1-5}. El clasificador se implementa con
+EfficientNet-B0 preentrenado en ImageNet, disponible en \texttt{torchvision}.
+Las métricas FID e IS se calculan con \texttt{torch-fidelity}.
+
+El entrenamiento de los generadores y del clasificador se ejecuta en Google
+Colab con GPU NVIDIA L4 (24\,GB VRAM).
+
+
+\section{Métodos}
+
+La metodología se organiza en tres etapas: generación de imágenes sintéticas
+de melanoma, validación de calidad generativa y entrenamiento de clasificadores
+bajo distintos escenarios experimentales.
+
+\subsection{Generación de imágenes sintéticas}
+
+Se implementan cuatro métodos de generación orientados a producir imágenes de
+melanoma para el aumento de datos de la clase minoritaria.
+
+\subsubsection{Textual Inversion}
+
+Textual Inversion~\cite{gal2022} permite personalizar un modelo de texto a
+imagen preentrenado para representar un concepto visual específico sin
+modificar los pesos del modelo base. El proceso aprende un nuevo token textual
+en el espacio de embeddings, de forma que ese token capture las características
+visuales del concepto a partir de un conjunto pequeño de imágenes de
+referencia. Una vez obtenido el token, puede integrarse en cualquier prompt
+para guiar la generación de nuevas imágenes del concepto en distintos
+contextos.
+
+En este trabajo se entrena el token \texttt{<mel-skin>} sobre las 801 imágenes
+de melanoma del conjunto de entrenamiento durante 5\,000 pasos, con el modelo
+\texttt{runwayml/stable-diffusion-v1-5} completamente congelado. Se generan
+4\,500 imágenes usando el prompt \textit{``dermoscopy image of
+\texttt{<mel-skin>}, skin lesion, clinical photography, high quality''}.
+
+\subsubsection{WGAN-GP}
+
+WGAN-GP~\cite{gulrajani2017} es una variante de las GANs que mejora la
+estabilidad del entrenamiento. El discriminador aprende a distinguir imágenes
+reales de generadas maximizando la distancia de Wasserstein entre ambas
+distribuciones. Para que el entrenamiento sea estable, se añade una
+penalización que obliga al discriminador a cambiar suavemente en cualquier punto del espacio de imágenes:
+\begin{equation}
+\mathcal{L} = \underbrace{\mathbb{E}[D(\tilde{x})] - \mathbb{E}[D(x)]}_{\text{distancia Wasserstein}}
+  + \lambda\,\mathbb{E}_{\hat{x}}\!\left[\left(\|\nabla_{\hat{x}} D(\hat{x})\|_2 - 1\right)^2\right]
+\end{equation}
+donde $x$ son imágenes reales, $\tilde{x}$ son imágenes generadas, $\hat{x}$
+son interpolaciones entre ambas y $\lambda$ pondera la penalización. El
+resultado es un entrenamiento más estable y con menor tendencia al
+\textit{mode collapse} que las GANs convencionales.
+
+A diferencia de los métodos basados en Stable Diffusion, WGAN-GP se entrena
+desde cero sobre las imágenes de melanoma del conjunto de entrenamiento.
+El entrenamiento se realiza durante 100 épocas con resolución de salida
+$64 \times 64$ píxeles, siguiendo una arquitectura convolucional estándar
+para generador y discriminador. Se generan 5\,000 imágenes a partir del
+generador final.
+
+\subsubsection{DreamBooth con LoRA}
+
+DreamBooth~\cite{dreambooth} realiza un ajuste fino del modelo de difusión
+para asociar un identificador único con la apariencia de una clase específica.
+A diferencia de Textual Inversion, que solo aprende el embedding textual,
+DreamBooth modifica los pesos del modelo e incorpora una pérdida de
+preservación de prior para evitar que el modelo olvide la distribución general
+de imágenes durante el ajuste fino.
+
+Para reducir el costo computacional se emplea la variante con LoRA
+(\textit{Low-Rank Adaptation}), que reemplaza las actualizaciones de peso
+completas por matrices de bajo rango ($r = 32$) en las capas de atención. El
+ajuste fino se realiza sobre las imágenes de melanoma del conjunto de
+entrenamiento con el modelo \texttt{runwayml/stable-diffusion-v1-5} como base,
+produciendo 4\,501 imágenes sintéticas.
+
+\subsubsection{Derm-T2IM}
+
+Derm-T2IM~\cite{farooq2024} es un modelo Stable Diffusion ajustado
+específicamente sobre imágenes dermatoscópicas de HAM10000 e ISIC. A
+diferencia de los métodos anteriores, no requiere ajuste fino adicional: se
+utiliza directamente en modo imagen-a-imagen, donde una imagen real de
+melanoma sirve de referencia y el modelo genera variaciones de ella.
+
+El grado de modificación se controla con el parámetro de fuerza $s \in [0,1]$:
+valores altos producen variaciones más diversas, mientras que valores bajos
+generan perturbaciones mínimas que conservan la estructura de la imagen
+original. Se evalúan dos configuraciones: $s = 0.40$, orientada a producir mayor
+variación morfológica y diversidad clínica, y $s = 0.05$, que introduce
+perturbaciones mínimas para maximizar la fidelidad a la imagen original y
+minimizar el domain shift. Ambos valores se evalúan en escenarios híbridos y
+exclusivamente sintéticos, resultando en cuatro escenarios Derm-T2IM.
+Cada configuración produce 1\,602 imágenes (dos variaciones por cada imagen de
+melanoma del conjunto de entrenamiento).
+
+\begin{table}[h]
+\caption{Resumen de métodos generativos. FID e IS calculados respecto al
+conjunto de melanomas reales de entrenamiento. Complejidad basada en
+parámetros entrenables y requisitos de GPU.}
+\label{tab:generadores}
+\centering
+\begin{tabular}{lccccc}
+\hline
+\textbf{Método} & \textbf{N} & \textbf{FID} & \textbf{IS} & \textbf{Complejidad} \\
+\hline
+Textual Inversion  & 4\,500 & 272.9 & 3.37 & Baja       \\
+WGAN-GP            & 5\,000 & 220.8 & 3.37 & Media      \\
+DreamBooth + LoRA  & 4\,501 & 121.7 & 3.43 & Media-Alta \\
+Derm-T2IM $s=0.40$ & 1\,602 &  46.7 & 3.43 & Baja       \\
+Derm-T2IM $s=0.05$ & 1\,602 &  21.1 & 3.43 & Baja       \\
+\hline
+\end{tabular}
+\end{table}
+
+
+\subsection{Validación de imágenes sintéticas}
+
+La calidad del conjunto resultante se evalúa con FID~\cite{heusel2017} e
+IS~\cite{salimans2016}. El FID compara las distribuciones de imágenes reales
+y sintéticas en el espacio de activaciones de Inception~v3:
+\begin{equation}
+\text{FID} = \|\mu_r - \mu_g\|^2 + \text{Tr}\!\left(\Sigma_r + \Sigma_g
+  - 2\!\left(\Sigma_r \Sigma_g\right)^{1/2}\right)
+\end{equation}
+donde $\mu_r$, $\Sigma_r$ y $\mu_g$, $\Sigma_g$ son las medias y covarianzas
+de las activaciones sobre imágenes reales y generadas, respectivamente;
+valores menores indican menor distancia distribucional. El IS cuantifica
+simultáneamente calidad y diversidad:
+\begin{equation}
+\text{IS} = \exp\!\left(\mathbb{E}_x\!\left[
+  \mathrm{KL}\!\left(p(y|x) \,\|\, p(y)\right)\right]\right)
+\end{equation}
+donde $p(y|x)$ es la distribución de clase predicha por Inception~v3 para la
+imagen $x$ y $p(y) = \int p(y|x)\,dp(x)$ es la distribución marginal. En este
+experimento los valores de IS son similares entre métodos (rango 3.37--3.43),
+por lo que el FID es la métrica discriminante.
+
+\subsection{Entrenamiento de clasificadores}
+
+Se entrena un clasificador EfficientNet-B0~\cite{tan2019} con pesos preentrenados en
+ImageNet, reemplazando la cabeza de clasificación por una capa densa de dos
+neuronas (nevus / melanoma). Se utiliza el optimizador AdamW con tasa de
+aprendizaje $1 \times 10^{-4}$, \textit{weight decay} $1 \times 10^{-4}$ y
+planificador CosineAnnealingLR durante 15 épocas. Las imágenes se redimensionan a $224 \times 224$ píxeles y se normalizan con la media y desviación estándar de ImageNet. El aumento de datos estándar
+incluye volteo horizontal y vertical, rotación aleatoria de $\pm20°$ y ajuste
+de color (ColorJitter). El modelo se guarda en el punto de menor pérdida de validación.
+
+Las métricas de evaluación principal son Recall, Precisión y F1-score de
+la clase melanoma, junto con el AUC-ROC:
+\begin{align}
+\text{Recall} &= \frac{TP}{TP + FN}, \qquad
+\text{Precisión} = \frac{TP}{TP + FP} \\[4pt]
+\text{F1} &= \frac{2 \cdot \text{Precisión} \cdot \text{Recall}}{\text{Precisión} + \text{Recall}} \\[4pt]
+\text{AUC} &= \int_0^1 \text{TPR}\bigl(\text{FPR}^{-1}(t)\bigr)\, dt
+\end{align}
+donde $TP$, $FP$, $FN$ y $TN$ son verdaderos positivos, falsos positivos,
+falsos negativos y verdaderos negativos de la clase melanoma;
+$\text{TPR} = \text{Recall}$ y $\text{FPR} = FP/(FP+TN)$. El Recall recibe énfasis especial dado que
+la detección de melanomas no diagnosticados tiene mayor coste clínico que
+los falsos positivos.
+
+El desbalanceo de clases se aborda exclusivamente mediante el aumento de datos
+sintéticos, sin recurrir a técnicas de balanceo paramétrico, de modo que el
+efecto de los datos generados pueda evaluarse de forma aislada.
+
+Se definen nueve escenarios en tres grupos:
+\begin{itemize}
+    \item \textbf{Baseline:} entrenamiento con datos reales únicamente
+    (801\,mel / 4\,675\,nv).
+    \item \textbf{Híbrido 2×:} 801 imágenes reales de melanoma más 801
+    sintéticas por generador (TI, LoRA, GAN, Derm $s=0.40$, Derm $s=0.05$).
+    \item \textbf{Solo sintéticas:} 801 imágenes sintéticas sin datos reales
+    de melanoma (TI, LoRA, GAN, Derm $s=0.05$, Derm $s=0.40$).
+\end{itemize}
+
+En todos los escenarios el conjunto de validación y prueba es 100\,\% real.
+
+\section{Resultados}
+
+\begin{figure*}[t]
+\centering
+\subfloat[Reales (referencia)]{\includegraphics[width=0.30\textwidth]{figures/grid_real_mel.png}}
+\hfill
+\subfloat[WGAN-GP --- FID\,=\,220.8]{\includegraphics[width=0.30\textwidth]{figures/grid_gan_final.png}}
+\hfill
+\subfloat[DreamBooth + LoRA --- FID\,=\,121.7]{\includegraphics[width=0.30\textwidth]{figures/grid_lora.png}}
+\\[0.4em]
+\subfloat[Derm-T2IM $s=0.40$ --- FID\,=\,46.7]{\includegraphics[width=0.30\textwidth]{figures/grid_derm_s040.png}}
+\hfill
+\subfloat[Derm-T2IM $s=0.05$ --- FID\,=\,21.1]{\includegraphics[width=0.30\textwidth]{figures/grid_derm_s005.png}}
+\hfill
+\subfloat[Textual Inversion --- FID\,=\,272.9]{\includegraphics[width=0.30\textwidth]{figures/grid_textual_inversion.png}}
+\caption{Muestras representativas (2$\times$3) de cada generador. WGAN-GP
+produce lesiones visualmente reconocibles pero con resolución limitada a
+$64\times64$ píxeles. DreamBooth + LoRA genera imágenes de mayor resolución
+con morfología dermatoscópica consistente. Las dos configuraciones de
+Derm-T2IM ($s=0.40$ y $s=0.05$) se ven similares entre sí porque ambas
+parten de imágenes reales de melanoma y aplican el modelo sobre dominio
+dermoscópico: la diferencia está en el grado de perturbación ($s=0.05$
+introduce cambios mínimos, casi imperceptibles; $s=0.40$ introduce mayor
+variación estructural), lo que se refleja en sus FID de 21.1 y 46.7
+respectivamente. Textual Inversion produce patrones que no corresponden a
+estructuras dermatoscópicas, lo que explica su FID de 272.9 y el colapso
+del clasificador en entrenamiento exclusivamente sintético.}
+\label{fig:grids}
+\end{figure*}
+
+\subsection{Calidad generativa}
+
+La Fig.~\ref{fig:grids} muestra muestras representativas de cada generador.
+Las diferencias visuales son notorias: Textual Inversion produce patrones
+abstractos sin estructura dermatoscópica, mientras que Derm-T2IM genera
+imágenes indistinguibles de los melanomas reales de referencia.
+
+Los valores de FID e IS para cada método se presentan en la
+Tabla~\ref{tab:generadores}. El FID varía ampliamente entre métodos, desde
+272.9 (Textual Inversion) hasta 21.1 (Derm-T2IM $s=0.05$), lo que refleja
+diferencias significativas en la proximidad distribucional respecto a los
+melanomas reales de entrenamiento. El IS presenta valores similares en todos
+los métodos (rango 3.37--3.43), confirmando que no discrimina entre
+generadores en este contexto.
+
+\subsection{Clasificación}
+
+La Tabla~\ref{tab:hibrido} presenta los resultados de los escenarios baseline
+e híbridos. Todos los generadores mejoran el AUC del baseline (0.911) al
+incorporar datos sintéticos. WGAN-GP alcanza el mayor AUC (0.929), Derm-T2IM
+$s=0.05$ registra el mayor Recall (0.610, +8.2\,pp sobre el baseline) y LoRA
+obtiene la mayor precisión (0.703). Ambas configuraciones de Derm-T2IM
+obtienen resultados similares en el escenario híbrido (AUC 0.917 y 0.920;
+Recall 0.604 y 0.610), lo que indica que en presencia de datos reales el
+parámetro $s$ tiene un efecto marginal sobre el rendimiento del clasificador.
+
+\begin{table}[h]
+\caption{Resultados en escenarios baseline e híbridos (test set 100\,\% real).
+En negrita el mejor valor por columna.}
+\label{tab:hibrido}
+\centering
+\begin{tabular}{lccccc}
+\hline
+\textbf{Escenario} & \textbf{AUC} & \textbf{Recall} & \textbf{Prec.} & \textbf{F1} & \textbf{Acc.} \\
+\hline
+Baseline              & 0.911 & 0.528 & 0.641 & 0.579 & 0.896 \\
+Híbrido TI            & 0.920 & 0.585 & 0.650 & \textbf{0.616} & 0.901 \\
+Híbrido LoRA          & 0.926 & 0.535 & \textbf{0.703} & 0.607 & \textbf{0.906} \\
+Híbrido GAN           & \textbf{0.929} & 0.579 & 0.635 & 0.605 & 0.898 \\
+Híbrido Derm $s=0.40$ & 0.917 & 0.604 & 0.568 & 0.585 & 0.884 \\
+Híbrido Derm $s=0.05$ & 0.920 & \textbf{0.610} & 0.618 & 0.614 & 0.896 \\
+\hline
+\end{tabular}
+\end{table}
+
+La Tabla~\ref{tab:sintetico} muestra los resultados de los escenarios
+exclusivamente sintéticos. TI, LoRA y GAN colapsan: el clasificador no detecta
+melanomas (Recall $\approx 0$) y el AUC cae a valores cercanos al azar
+(0.55--0.61). Las dos configuraciones de Derm-T2IM se diferencian notablemente:
+$s=0.40$ evita el colapso total (AUC = 0.845) pero obtiene un Recall bajo
+(0.145), mientras que $s=0.05$ mantiene viabilidad plena (AUC = 0.878,
+Recall = 0.478). Esta diferencia es coherente con sus FID respectivos
+(46.7 frente a 21.1): la menor perturbación de $s=0.05$ produce imágenes más
+cercanas a la distribución real y permite al clasificador aprender
+representaciones transferibles al test set.
+
+\begin{table}[h]
+\caption{Resultados en escenarios exclusivamente sintéticos (test set 100\,\%
+real). En negrita el mejor valor por columna.}
+\label{tab:sintetico}
+\centering
+\begin{tabular}{lccccc}
+\hline
+\textbf{Escenario} & \textbf{AUC} & \textbf{Recall} & \textbf{Prec.} & \textbf{F1} & \textbf{Acc.} \\
+\hline
+Solo TI            & 0.561 & 0.000 & 0.000 & 0.000 & 0.862 \\
+Solo LoRA          & 0.551 & 0.006 & 0.333 & 0.012 & 0.863 \\
+Solo GAN           & 0.610 & 0.006 & 0.167 & 0.012 & 0.861 \\
+Solo Derm $s=0.40$ & 0.845 & 0.145 & 0.639 & 0.236 & 0.873 \\
+Solo Derm $s=0.05$ & \textbf{0.878} & \textbf{0.478} & \textbf{0.576} & \textbf{0.522} & \textbf{0.881} \\
+\hline
+\end{tabular}
+\end{table}
+
+La correlación entre FID y rendimiento en los escenarios exclusivamente
+sintéticos sugiere que la distancia distribucional entre imágenes sintéticas y
+reales determina la viabilidad del entrenamiento sin datos reales. El único
+generador con FID suficientemente bajo (Derm-T2IM $s=0.05$, FID = 21.1) logra
+transferir al clasificador conocimiento útil sobre la distribución real del
+melanoma.
+
+
+\section{Discusión}
+
+\subsection{Aumento de datos híbrido}
+
+Los cuatro generadores mejoran el AUC del baseline cuando se combinan con
+datos reales, lo que indica que incluso imágenes sintéticas con alta distancia
+distribucional (FID\,=\,272.9 en Textual Inversion) aportan información útil
+cuando coexisten con datos reales en el conjunto de entrenamiento. En este
+escenario, las imágenes reales actúan como ancla distribucional: el
+clasificador aprende la distribución del melanoma real y las imágenes
+sintéticas aportan variabilidad adicional que reduce el sobreajuste a los
+pocos ejemplos reales de la clase minoritaria.
+
+WGAN-GP logra el mejor AUC híbrido (0.929) pese a tener el tercer peor FID
+(220.8). Esto muestra que en presencia de datos reales el FID no predice el
+rendimiento del clasificador. Una posible razón es que las imágenes GAN se
+generan desde cero, sin partir de una imagen real concreta, por lo que
+aportan variaciones visuales distintas a las de los métodos imagen-a-imagen;
+esta mayor diversidad podría favorecer la generalización del clasificador.
+Sin embargo, el diseño experimental no permite confirmar esta hipótesis de
+forma aislada.
+
+\subsection{Colapso en entrenamiento exclusivamente sintético}
+
+El colapso del clasificador en tres de los cuatro escenarios
+exclusivamente sintéticos (Recall\,$\approx$\,0) tiene una explicación
+directa en el \textit{domain shift}. Este fenómeno ocurre cuando la
+distribución de los datos de entrenamiento difiere de la distribución de
+los datos de prueba: el modelo aprende patrones propios del dominio
+sintético que no se transfieren al dominio real. En este experimento,
+cuando el clasificador se entrena exclusivamente con imágenes sintéticas
+de melanoma, aprende representaciones basadas en los artefactos visuales
+del generador; al enfrentarse al conjunto de prueba real, esas
+representaciones no son útiles para discriminar melanoma de nevo. El
+modelo entonces minimiza la pérdida prediciendo siempre nevo, que
+constituye el 86.9\,\% del conjunto de validación, obteniendo accuracy
+alta con Recall nulo.
+
+Derm-T2IM $s=0.05$ evita este colapso porque sus imágenes son perturbaciones
+mínimas de los melanomas reales de entrenamiento, con un FID de 21.1 que
+refleja una distribución muy cercana a la real. El clasificador entrenado con
+estas imágenes aprende una representación útil de la clase melanoma que
+transfiere al test set real. El hecho de que aún así no alcance el desempeño
+híbrido (AUC\,=\,0.878 frente a 0.917) sugiere que la variabilidad inherente
+a los datos reales no es totalmente capturada por las perturbaciones mínimas.
+
+\subsection{Efecto del parámetro de fuerza en Derm-T2IM}
+
+El parámetro $s$ de Derm-T2IM controla el grado de perturbación aplicado a
+la imagen de referencia: $s=0.40$ introduce mayor variación morfológica
+(FID\,=\,46.7), mientras que $s=0.05$ produce perturbaciones mínimas
+(FID\,=\,21.1). Los resultados permiten cuantificar el impacto de este
+parámetro en ambos tipos de escenario.
+
+En el escenario híbrido, la diferencia entre $s=0.40$ (Recall\,=\,0.604,
+AUC\,=\,0.917) y $s=0.05$ (Recall\,=\,0.610, AUC\,=\,0.920) es marginal:
+la presencia de datos reales compensa el domain shift adicional de $s=0.40$
+y hace que el beneficio de reducir la perturbación sea casi nulo. En este
+régimen, la mayor diversidad morfológica de $s=0.40$ no aporta una ventaja
+apreciable sobre las perturbaciones mínimas de $s=0.05$.
+
+En el escenario exclusivamente sintético, el efecto es
+diferente. $s=0.40$ obtiene AUC\,=\,0.845 y Recall\,=\,0.145: evita el
+colapso total (a diferencia de TI, LoRA y GAN), pero el clasificador
+discrimina deficientemente la clase melanoma. $s=0.05$, con imágenes más
+cercanas a la distribución real, alcanza AUC\,=\,0.878 y Recall\,=\,0.478.
+La diferencia de 25.7 unidades de FID entre ambos se traduce en 33.3 puntos
+porcentuales de Recall, confirmando que en ausencia de datos reales la
+proximidad distribucional es el factor crítico.
+
+En conjunto, estos resultados sugieren que $s$ debe calibrarse en función del
+escenario: en entrenamiento híbrido ambos valores son equivalentes; en
+entrenamiento exclusivamente sintético, minimizar $s$ (y por tanto el FID) es
+determinante para la viabilidad del clasificador.
+
+\subsection{Rol del FID como predictor de viabilidad}
+
+La relación entre FID y viabilidad del entrenamiento exclusivamente sintético
+es monotónica en este experimento: el único generador que supera el umbral de
+viabilidad es el que tiene menor FID. Esto no equivale a afirmar que el FID
+sea un predictor universal del desempeño del clasificador: en el escenario
+híbrido la correlación no se mantiene (GAN tiene peor FID que LoRA pero mejor
+AUC híbrido). El FID es una métrica de distancia distribucional global y no
+captura propiedades locales de las imágenes que pueden ser relevantes para la
+tarea de clasificación.
+
+El IS, por su parte, no discrimina entre métodos en este contexto (rango
+3.37--3.43). Esto es consistente con la literatura que señala sus limitaciones
+para detectar \textit{domain shift} y \textit{mode collapse} en datasets
+especializados.
+
+\subsection{Limitaciones}
+
+Las principales limitaciones del estudio son las siguientes. Primero, el
+volumen fijo de 801 imágenes sintéticas puede no ser óptimo para todos los
+generadores: no se exploró el impacto de distintos volúmenes de aumento de
+datos ni la sensibilidad de los resultados a ese hiperparámetro. Segundo,
+WGAN-GP genera imágenes a $64 \times 64$ píxeles que se escalan a
+$224 \times 224$ para la clasificación, lo que introduce un artefacto de
+resolución que no afecta a los métodos basados en Stable Diffusion. Tercero,
+los resultados se obtienen con una única arquitectura de clasificador
+(EfficientNet-B0) y pueden no generalizar a otros modelos. Cuarto, la
+evaluación de calidad con FID e IS usa como referencia las imágenes de
+entrenamiento, no el conjunto completo de melanomas en HAM10000. Quinto,
+los escenarios Derm-T2IM emplean conjuntos de imágenes generados de forma
+independiente para cada valor de $s$ (no las mismas muestras), lo que impide
+una comparación perfectamente controlada del efecto del parámetro sobre el
+mismo conjunto base. Sexto, tanto FID como IS dependen de características
+extraídas por InceptionV3, una red entrenada sobre ImageNet, lo que introduce
+un sesgo hacia imágenes naturales y limita su capacidad para representar
+adecuadamente dominios especializados como la dermoscopia; métricas
+complementarias orientadas a modelos generativos, como la Precisión y
+Recall~\cite{kynkaanniemi2019}, podrían ofrecer una valoración más robusta.
+
+\section{Conclusiones}
+
+Este trabajo evaluó cuatro métodos generativos (Textual Inversion, WGAN-GP,
+DreamBooth + LoRA y Derm-T2IM) como estrategia de aumento de datos para
+abordar el desbalanceo de clases en la clasificación binaria nevus/melanoma
+sobre HAM10000. Los experimentos, controlados por volumen de aumento y con
+test set siempre 100\,\% real, permiten extraer tres conclusiones principales.
+
+Primera: el aumento de datos híbrido mejora el Recall de melanoma en todos
+los generadores respecto al baseline (0.528). Derm-T2IM $s=0.05$ registra
+el mayor incremento (+8.2\,pp, Recall\,=\,0.610), mientras que LoRA obtiene
+la mayor precisión (0.703) y WGAN-GP el mejor AUC (0.929). Esto indica que
+incluso imágenes sintéticas de baja fidelidad distribucional son útiles para
+mejorar la detección de melanoma cuando se combinan con datos reales.
+
+Segunda: el entrenamiento exclusivamente con datos sintéticos provoca que el
+clasificador no detecte ningún melanoma (Recall\,$\approx$\,0) en tres de los
+cuatro métodos. El \textit{domain shift}, entendido como la diferencia entre la distribución
+de las imágenes sintéticas y la de las imágenes reales del test set, es el
+factor determinante: el único generador que mantiene un Recall viable es
+Derm-T2IM $s=0.05$ (Recall\,=\,0.478, FID\,=\,21.1), que produce imágenes
+significativamente más cercanas a la distribución real.
+
+Tercera: el FID predice correctamente la viabilidad del entrenamiento
+exclusivamente sintético: a menor FID, mayor Recall. Por otra parte, el IS
+no discrimina entre generadores en este contexto. El FID es en este estudio, la
+métrica de calidad generativa más informativa para anticipar el impacto
+clínico de los datos sintéticos.
+
+Como trabajo futuro se propone explorar la sensibilidad de los resultados al
+volumen de aumento de datos, aplicar los métodos a otras arquitecturas de
+clasificador y extender el análisis a escenarios multiclase con las siete
+categorías de HAM10000. También resulta de interés evaluar si generadores más
+recientes, como Stable Diffusion XL o modelos de difusión de flujo, reducen
+el domain shift y habilitan un entrenamiento exclusivamente sintético con
+Recall clínicamente viable.
+
+\begin{thebibliography}{9}
+
+\bibitem{esteva2017}
+A.~Esteva, B.~Kuprel, R.~A.~Novoa, J.~Ko, S.~M.~Swetter, H.~M.~Blau, and
+S.~Thrun, ``Dermatologist-level classification of skin cancer with deep neural
+networks,'' \emph{Nature}, vol.~542, pp.~115--118, Feb.~2017.
+
+\bibitem{tan2019}
+M.~Tan and Q.~V.~Le, ``EfficientNet: Rethinking model scaling for
+convolutional neural networks,'' in \emph{Proc. 36th Int. Conf. Mach. Learn.
+(ICML)}, 2019, pp.~6105--6114.
+
+\bibitem{chawla2002}
+N.~V.~Chawla, K.~W.~Bowyer, L.~O.~Hall, and W.~P.~Kegelmeyer, ``SMOTE:
+Synthetic minority over-sampling technique,'' \emph{J. Artif. Intell. Res.},
+vol.~16, pp.~321--357, 2002.
+
+\bibitem{baur2018}
+C.~Baur, S.~Albarqouni, and N.~Navab, ``MelanoGANs: High resolution skin
+lesion synthesis with GANs,'' \emph{arXiv preprint arXiv:1804.04338},
+2018.
+
+\bibitem{ham10000}
+P.~Tschandl, ``The HAM10000 dataset, a large collection of multi-source
+dermatoscopic images of common pigmented skin lesions,'' Harvard Dataverse,
+2018. [Online]. Available: \url{https://doi.org/10.7910/DVN/DBW86T}
+
+\bibitem{gal2022}
+R.~Gal \emph{et al.}, ``An image is worth one word: Personalizing
+text-to-image generation using textual inversion,'' \emph{arXiv preprint
+arXiv:2208.01618}, 2022.
+
+\bibitem{dreambooth}
+N.~Ruiz, Y.~Li, V.~Jampani, Y.~Pritch, M.~Rubinstein, and K.~Aberman,
+``DreamBooth: Fine tuning text-to-image diffusion models for subject-driven
+generation,'' in \emph{Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit.
+(CVPR)}, 2023, pp.~22500--22510.
+
+\bibitem{farooq2024}
+M.~A.~Farooq, W.~Yao, M.~Schukat, M.~A.~Little, and P.~Corcoran,
+``Derm-T2IM: Harnessing synthetic skin lesion data via Stable Diffusion
+models for enhanced skin disease classification using ViT and CNN,''
+\emph{arXiv preprint arXiv:2401.05159}, Jan.~2024.
+
+\bibitem{gulrajani2017}
+I.~Gulrajani, F.~Ahmed, M.~Arjovsky, V.~Dumoulin, and A.~Courville,
+``Improved training of Wasserstein GANs,'' \emph{arXiv preprint
+arXiv:1704.00028}, 2017.
+
+\bibitem{akrout2024}
+M.~Akrout \emph{et al.}, ``Diffusion-based data augmentation for skin
+disease classification: Impact across original medical datasets to fully
+synthetic images,'' in \emph{Deep Generative Models, MICCAI 2023}, Lecture
+Notes in Computer Science, vol.~14533, Springer, 2024, pp.~99--109.
+
+\bibitem{rahat2025}
+F.~Rahat, M.~S.~Hossain, M.~R.~Ahmed, S.~K.~Jha, and R.~Ewetz, ``Data
+augmentation for image classification using generative AI,'' in \emph{Proc.
+IEEE/CVF Winter Conf. Appl. Comput. Vis. (WACV)}, 2025, pp.~4173--4181.
+
+\bibitem{chan2023}
+Y.~Chan, Z.~Yan, and Y.~Zhu, ``A comprehensive survey for generative data
+augmentation,'' \emph{arXiv preprint arXiv:2310.00277}, 2023.
+
+\bibitem{ibrahim2024}
+M.~Ibrahim \emph{et al.}, ``Generative AI for synthetic data across multiple
+medical modalities: A systematic review of recent developments and
+challenges,'' \emph{arXiv preprint arXiv:2407.00116}, 2024.
+
+\bibitem{zhang2025}
+L.~Zhang \emph{et al.}, ``Generative AI enables medical image segmentation
+in ultra low-data regimes,'' \emph{Nature Commun.}, vol.~16, art.~6486,
+Jul.~2025.
+
+\bibitem{rombach2022}
+R.~Rombach, A.~Blattmann, D.~Lorenz, P.~Esser, and B.~Ommer,
+``High-resolution image synthesis with latent diffusion models,'' in
+\emph{Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit. (CVPR)}, 2022,
+pp.~10684--10695.
+
+\bibitem{heusel2017}
+M.~Heusel, H.~Ramsauer, T.~Unterthiner, B.~Nessler, and S.~Hochreiter,
+``GANs trained by a two time-scale update rule converge to a local Nash
+equilibrium,'' in \emph{Adv. Neural Inf. Process. Syst. (NeurIPS)},
+vol.~30, 2017.
+
+\bibitem{kynkaanniemi2019}
+M.~Kynk\"{a}\"{a}nniemi, T.~Karras, S.~Laine, J.~Lehtinen, and T.~Aila,
+``Improved precision and recall metric for assessing generative models,''
+in \emph{Adv. Neural Inf. Process. Syst. (NeurIPS)}, vol.~32, 2019,
+pp.~3927--3936.
+
+\bibitem{salimans2016}
+T.~Salimans, I.~Goodfellow, W.~Zaremba, V.~Cheung, A.~Radford, and X.~Chen,
+``Improved techniques for training GANs,'' in \emph{Adv. Neural Inf.
+Process. Syst. (NeurIPS)}, vol.~29, 2016.
+
+\end{thebibliography}
+
+\end{document}
