@@ -10,11 +10,11 @@ Este proyecto sigue el proceso iterativo definido por **CRISP-ML(Q)** (Studer et
 
 | Fase CRISP-ML(Q) | Descripción en este proyecto | Artefactos |
 |---|---|---|
-| **1. Business & Research Understanding** | Definir la pregunta de investigación: ¿puede la augmentación sintética con Stable Diffusion mejorar la detección de melanoma en un dataset desbalanceado? | `CLAUDE.md` §Fases, `config/project.yaml` |
+| **1. Business & Research Understanding** | Definir la pregunta de investigación: ¿puede la augmentación sintética con Stable Diffusion mejorar la detección de melanoma en un dataset desbalanceado? | Artículo de investigación |
 | **2. Data Understanding** | Análisis exploratorio de HAM10000: distribución de clases, diversidad morfológica, desbalance severo mel/nv | `notebooks/exploration/HAM10000_EDA.ipynb`, `data/processed/splits/metadata.json` |
 | **3. Data Preparation** | Split lesion-aware (70/15/15 por `lesion_id`), extracción de imágenes, preparación de conjuntos para augmentación y clasificación | `scripts/data_processing/01_extract.py`, `02_split.py`, `tests/test_split_leakage.py` |
-| **4. Modeling** | Entrenamiento de modelos generativos (TI, img2img, LoRA, Derm-T2IM, WGAN-GP) y clasificador EfficientNet-B0 bajo 4 escenarios de augmentación | `notebooks/generation/`, `GAN/HAM10000_GAN.ipynb`, `HAM10000_classification_final.ipynb` |
-| **5. Evaluation** | Comparación de escenarios con métricas clínicas (AUC, Recall melanoma, F1) y de calidad generativa (FID, Inception Score) | `HAM10000_quality_evaluation.ipynb`, `scripts/augmentation/evaluate_generation.py`, `experiments/` |
+| **4. Modeling** | Entrenamiento de modelos generativos (TI, LoRA, Derm-T2IM, WGAN-GP) y clasificador EfficientNet-B0 bajo 11 escenarios experimentales | `notebooks/generation/`, `GAN/HAM10000_GAN.ipynb`, `HAM10000_classification_comparative.ipynb` |
+| **5. Evaluation** | Comparación de escenarios con métricas clínicas (AUC, Recall melanoma, F1) y de calidad generativa (FID, Inception Score) | `HAM10000_quality_evaluation.ipynb`, `scripts/augmentation/evaluate_generation.py` |
 | **6. Deployment** | Aplicación web para generación interactiva de imágenes dermoscópicas con el modelo GAN entrenado | `webapp/`, `GAN/checkpoints/generator_final.h5` |
 
 ---
@@ -121,26 +121,43 @@ Se exploraron cuatro estrategias de síntesis de imágenes dermoscópicas de mel
 - **Arquitectura:** EfficientNet-B0 preentrenado (ImageNet)
 - **Hiperparámetros fijos en todos los escenarios:**
   - Epochs: 15 | LR: 1e-4 | Scheduler: CosineAnnealingLR
-  - Batch size: 32 | Optimizer: Adam | Semilla: 42
-  - WeightedRandomSampler para compensar desbalance residual
+  - Batch size: 32 | Optimizer: AdamW | Semilla: 42
+  - Sin WeightedRandomSampler — el desbalance se ataca únicamente con los datos sintéticos
 - **Notebook:** `HAM10000_classification_comparative.ipynb`
 
 ### 4.3 Escenarios experimentales
 
-El diseño compara cuatro métodos generativos bajo el mismo volumen de augmentación (**2×**: tantas sintéticas como reales de melanoma, ~801). Esto hace los resultados comparables entre generadores sin confundir el efecto del volumen con el del método. El escenario `synthetic_only_ti` se incluye como ablación para evaluar si las imágenes sintéticas pueden sustituir completamente a las reales, siguiendo el diseño de Akrout et al. (2023).
+El diseño compara cinco métodos generativos bajo el mismo volumen de augmentación (**2×**: tantas sintéticas como reales de melanoma, ~801). Los escenarios `synthetic_only_*` evalúan si las imágenes sintéticas pueden sustituir completamente a las reales, siguiendo el diseño de Akrout et al. (2024).
 
-| Escenario | Train melanoma | Método generativo | Pregunta central |
-|---|---|---|---|
-| `real_only` | 801 reales | — | Baseline sin augmentación |
-| `real_2x_ti` | 801 real + 801 TI | Textual Inversion (SD v1.5) | ¿TI mejora el Recall de melanoma? |
-| `real_2x_lora` | 801 real + 801 LoRA | LoRA fine-tuning (SD v1.5) | ¿LoRA supera a TI? |
-| `real_2x_gan` | 801 real + 801 GAN | WGAN-GP 64×64 px | ¿Una GAN clásica es competitiva con SD? |
-| `real_2x_derm` | 801 real + 801 Derm | Derm-T2IM img2img (s=0.40) | ¿Un modelo dermoscopy-specific reduce el distributional shift? |
-| `synthetic_only_ti` | 801 TI (sin reales) | Textual Inversion | ¿Las sintéticas pueden sustituir a las reales? |
+**Grupo 1 — Baseline**
 
-**Control de cantidad:** todos los escenarios `real_2x_*` usan exactamente `N_REAL_MEL` ≈ 801 imágenes sintéticas. El test set es siempre 100% real (159 mel / 1,012 nv).
+| Escenario | Train melanoma | Método |
+|---|---|---|
+| `real_only` | 801 reales | — |
 
-> Diseño inspirado en: Akrout et al. (2023). *Diffusion-based Data Augmentation for Skin Disease Classification*. arXiv:2301.04802
+**Grupo 2 — Híbrido 2× (real + sintético)**
+
+| Escenario | Train melanoma | Método generativo |
+|---|---|---|
+| `real_2x_ti` | 801 real + 801 TI | Textual Inversion (SD v1.5) |
+| `real_2x_lora` | 801 real + 801 LoRA | LoRA fine-tuning (SD v1.5) |
+| `real_2x_gan` | 801 real + 801 GAN | WGAN-GP 64×64 px |
+| `real_2x_derm` | 801 real + 801 Derm | Derm-T2IM img2img (s=0.40) |
+| `real_2x_derm005` | 801 real + 801 Derm | Derm-T2IM img2img (s=0.05) |
+
+**Grupo 3 — Solo sintéticas (ablación)**
+
+| Escenario | Train melanoma | Método generativo |
+|---|---|---|
+| `synthetic_only_ti` | 801 TI (sin reales) | Textual Inversion |
+| `synthetic_only_lora` | 801 LoRA (sin reales) | LoRA fine-tuning |
+| `synthetic_only_gan` | 801 GAN (sin reales) | WGAN-GP |
+| `synthetic_only_derm` | 801 Derm (sin reales) | Derm-T2IM (s=0.05) |
+| `synthetic_only_derm040` | 801 Derm (sin reales) | Derm-T2IM (s=0.40) |
+
+**Control de cantidad:** todos los escenarios usan exactamente `N_REAL_MEL` ≈ 801 imágenes sintéticas. El test set es siempre 100% real (159 mel / 1,012 nv).
+
+> Diseño inspirado en: Akrout et al. (2024). *Diffusion-based Data Augmentation for Skin Disease Classification*. MICCAI DGM Workshop.
 
 ---
 
@@ -169,13 +186,13 @@ Notebook de evaluación: `HAM10000_quality_evaluation.ipynb`
 
 | Métrica | Valor |
 |---|---|
-| AUC-ROC | 0.926 |
-| Recall melanoma | 0.843 |
-| F1 melanoma | 0.604 |
-| Precisión melanoma | 0.470 |
-| Accuracy | 0.850 |
+| AUC-ROC | 0.911 |
+| Recall melanoma | 0.528 |
+| F1 melanoma | 0.579 |
+| Precisión melanoma | 0.641 |
+| Accuracy | 0.896 |
 
-Experimento: `experiments/20260426_204545_real_only/`
+Resultados completos de los 11 escenarios en Drive: `ham10000-augmentation/experiments/`
 
 ---
 
@@ -206,7 +223,7 @@ Data Understanding
       ↓
   Evaluación de calidad sintética (FID/IS)  ←──────┐
       ↓                                             │
-  Clasificación comparativa (4 escenarios)          │
+  Clasificación comparativa (11 escenarios)          │
       ↓                                             │
   ¿Mejora el Recall mel?  ──── No ─────────────────┘
       ↓ Sí
