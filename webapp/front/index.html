@@ -21,11 +21,21 @@
 
 <div id="generator" class="section active">
   <div class="container">
-    <h1>GAN Image Generator</h1>
-    <p class="subtitle">Genera imágenes para combatir el desbalanceo</p>
+    <h1>Generador de melanoma sintético</h1>
+    <p class="subtitle">Genera imágenes dermoscópicas de melanoma con WGAN-GP entrenado sobre HAM10000</p>
+
+    <div class="instructions">
+      <p><strong>Cómo usar:</strong></p>
+      <ol>
+        <li>Ingresa la cantidad de imágenes que deseas generar (1–20 recomendado).</li>
+        <li>Haz clic en <em>Generar</em> y espera unos segundos.</li>
+        <li>Las imágenes aparecen en la cuadrícula. Puedes descargarlas todas como ZIP con el botón <em>Descargar imágenes</em>.</li>
+      </ol>
+      <p class="note">Las imágenes son sintéticas (64×64 px), generadas por el modelo WGAN-GP. No representan pacientes reales.</p>
+    </div>
 
     <div class="controls">
-      <input type="number" id="num" placeholder="Cantidad de imágenes" />
+      <input type="number" id="num" placeholder="Cantidad de imágenes" min="1" max="50" />
       <button onclick="generate()">Generar</button>
     </div>
 

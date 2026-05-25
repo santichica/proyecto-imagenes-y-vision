@@ -1,5 +1,7 @@
 # Augmentación sintética para mitigar el desbalanceo de clases en la detección de melanoma dermoscópico
 
+> Desarrollado con asistencia de [Claude Code](https://claude.ai/code) (Anthropic) para implementación, depuración y documentación.
+
 Clasificación binaria **Nevus vs Melanoma** sobre HAM10000 con augmentación sintética via Stable Diffusion y WGAN-GP. Proyecto de investigación que compara cuatro métodos generativos (Textual Inversion, LoRA, Derm-T2IM y WGAN-GP) como estrategia de rebalanceo de clases sin técnicas de sampling artificial.
 
 **Integrantes:** Santiago Chica · Gabriel Gómez · Michael Patiño · Juan Diego Sarmiento
@@ -113,8 +115,7 @@ proyecto-imagenes-y-vision/
 │   │   ├── HAM10000_generation.ipynb          ← generación SD (TI + img2img)
 │   │   ├── HAM10000_lora_training.ipynb       ← fine-tuning LoRA
 │   │   └── HAM10000_derm_generation.ipynb     ← generación Derm-T2IM
-│   ├── experiments/                           ← versiones previas del clasificador
-│   └── exploration/                           ← EDA y baseline exploratorio
+│   └── exploration/                           ← EDA exploratorio
 ├── scripts/
 │   ├── data_processing/
 │   │   ├── 01_extract.py                      ← extracción de imágenes HAM10000
@@ -136,7 +137,3 @@ proyecto-imagenes-y-vision/
 ```
 
 Los datos completos (imágenes sintéticas, modelos entrenados, runs de experimentos) están en [Google Drive](https://drive.google.com/drive/folders/1dAEHEQwjZaMYovx--IB0l727m25F_FRV?usp=drive_link).
-
----
-
-> **Nota:** este proyecto fue desarrollado con asistencia de [Claude Code](https://claude.ai/code) (Anthropic) para tareas de implementación, depuración y documentación.

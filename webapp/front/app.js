@@ -92,8 +92,8 @@ function createChart() {
 
     if (chart) chart.destroy();
 
-    const models = ["LoRA", "LoRA NEW", "img2img", "GAN", "GAN NEW"];
-    const fidValues = [155.0089, 155.0089, 53.2477, 254.8915, 199.1471];
+    const models = ["Textual Inversion", "WGAN-GP", "DreamBooth + LoRA", "Derm-T2IM s=0.40", "Derm-T2IM s=0.05"];
+    const fidValues = [272.9, 220.8, 121.7, 46.7, 21.1];
 
     const colors = fidValues.map(v => {
         if (v < 80) return "#00ff99";
