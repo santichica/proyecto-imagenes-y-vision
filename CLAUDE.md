@@ -49,20 +49,26 @@ This repository supports a research project on binary skin lesion classification
 - Notebook: `HAM10000_quality_evaluation.ipynb`
 
 ### Phase 4 — Clasificación comparativa 🔄 En curso (Colab)
-- Modelo: EfficientNet-B0 (15 epochs, lr=1e-4, CosineAnnealingLR, WeightedRandomSampler)
+- Modelo: EfficientNet-B0 (15 epochs, lr=1e-4, AdamW, CosineAnnealingLR, seed=42)
+- **Sin WeightedRandomSampler** — desbalanceo atacado únicamente con datos sintéticos
+- Checkpoint criterion: mejor val_loss
 - Notebook canónico: `HAM10000_classification_comparative.ipynb`
-- Diseño: comparar 4 generadores con volumen fijo 2× (N_REAL_MEL ≈ 801 sintéticas)
-- Escenarios:
-  | Escenario | Train mel | Generador | Estado |
-  |---|---|---|---|
-  | `real_only` | 801 reales | — | ✅ AUC 0.926 / Recall 0.843 / F1 0.604 |
-  | `real_2x_ti` | 801 real + 801 TI | Textual Inversion | 🔄 corriendo |
-  | `real_2x_lora` | 801 real + 801 LoRA | LoRA SD v1.5 | 🔄 corriendo |
-  | `real_2x_gan` | 801 real + 801 GAN | WGAN-GP | 🔄 corriendo |
-  | `real_2x_derm` | 801 real + 801 Derm | Derm-T2IM (s=0.40) | 🔄 corriendo |
-  | `synthetic_only_ti` | 801 TI (sin reales) | Textual Inversion | 🔄 corriendo |
+- Diseño: comparar 5 generadores con volumen fijo 2× (N_REAL_MEL ≈ 801 sintéticas)
+- 11 escenarios:
+  | Escenario | Generador | Estado |
+  |---|---|---|
+  | `real_only` | — | ✅ AUC 0.911 / Recall 0.528 / F1 0.579 |
+  | `real_2x_ti` | Textual Inversion | 🔄 |
+  | `real_2x_lora` | LoRA SD v1.5 | 🔄 |
+  | `real_2x_gan` | WGAN-GP | 🔄 |
+  | `real_2x_derm` | Derm-T2IM s=0.40 | 🔄 |
+  | `real_2x_derm005` | Derm-T2IM s=0.05 | 🔄 |
+  | `synthetic_only_ti` | Textual Inversion | 🔄 |
+  | `synthetic_only_lora` | LoRA SD v1.5 | 🔄 |
+  | `synthetic_only_gan` | WGAN-GP | 🔄 |
+  | `synthetic_only_derm` | Derm-T2IM s=0.05 | 🔄 |
+  | `synthetic_only_derm040` | Derm-T2IM s=0.40 | 🔄 |
 - Test set siempre 100% real (159 mel / 1 012 nv)
-- Baseline local: `experiments/20260426_204545_real_only/`
 - Resultados Colab en Drive: `ham10000-augmentation/experiments/`
 
 ### Phase 5 — Webapp de generación ✅ Integrada

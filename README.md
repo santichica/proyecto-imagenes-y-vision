@@ -26,12 +26,14 @@ Clasificador EfficientNet-B0, test set 100% real (159 mel / 1 012 nv):
 | Real only (baseline) | 0.911 | 0.528 | 0.579 |
 | Real + TI (2×) | 0.920 | 0.585 | 0.616 |
 | Real + LoRA (2×) | 0.926 | 0.535 | 0.607 |
-| **Real + WGAN-GP (2×)** | **0.929** | 0.579 | 0.605 |
-| Real + Derm-T2IM (2×) | 0.917 | **0.604** | 0.585 |
+| Real + WGAN-GP (2×) | **0.929** | 0.579 | 0.605 |
+| Real + Derm-T2IM s=0.40 (2×) | 0.917 | **0.604** | 0.585 |
+| Real + Derm-T2IM s=0.05 (2×) | — | — | — |
 | Synthetic only — TI | 0.561 | 0.000 | 0.000 |
 | Synthetic only — LoRA | 0.551 | 0.006 | 0.012 |
 | Synthetic only — WGAN-GP | 0.610 | 0.006 | 0.012 |
 | Synthetic only — Derm-T2IM s=0.05 | 0.878 | 0.478 | 0.522 |
+| Synthetic only — Derm-T2IM s=0.40 | — | — | — |
 
 **Conclusiones:** la augmentación híbrida mejora el AUC en todos los generadores (+0.6–1.8 pp). En entrenamiento exclusivamente sintético, solo Derm-T2IM con perturbación mínima (strength=0.05, FID=21) mantiene viabilidad; TI, LoRA y WGAN-GP colapsan (Recall≈0) por domain shift severo. El FID es el indicador más predictivo de la transferibilidad del clasificador.
 
@@ -83,10 +85,12 @@ El dataset completo (imágenes reales + sintéticas + modelos entrenados) está 
 
 | Notebook | Descripción |
 |---|---|
-| [`HAM10000_classification_comparative.ipynb`](HAM10000_classification_comparative.ipynb) | 9 escenarios de clasificación (baseline · 2× · synthetic-only) |
+| [`HAM10000_classification_comparative.ipynb`](HAM10000_classification_comparative.ipynb) | 11 escenarios de clasificación (baseline · 2× · synthetic-only) |
 | [`HAM10000_quality_evaluation.ipynb`](HAM10000_quality_evaluation.ipynb) | FID e IS por generador |
-| [`HAM10000_textual_inversion.ipynb`](HAM10000_textual_inversion.ipynb) | Entrenamiento del token TI |
+| [`HAM10000_textual_inversion.ipynb`](notebooks/generation/HAM10000_textual_inversion.ipynb) | Entrenamiento del token TI |
 | [`HAM10000_generation.ipynb`](notebooks/generation/HAM10000_generation.ipynb) | Generación con SD (TI + img2img) |
+| [`HAM10000_lora_training.ipynb`](notebooks/generation/HAM10000_lora_training.ipynb) | Fine-tuning LoRA (rank=32) sobre SD v1.5 |
+| [`HAM10000_derm_generation.ipynb`](notebooks/generation/HAM10000_derm_generation.ipynb) | Generación Derm-T2IM (img2img dermoscopy-specific) |
 | [`GAN/HAM10000_GAN.ipynb`](GAN/HAM10000_GAN.ipynb) | Entrenamiento WGAN-GP |
 
 Ver diseño metodológico completo en [METHODOLOGY.md](METHODOLOGY.md).
