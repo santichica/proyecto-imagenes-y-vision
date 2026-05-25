@@ -8,6 +8,19 @@ Clasificación binaria **Nevus vs Melanoma** sobre HAM10000 con augmentación si
 
 ---
 
+## Imágenes de prueba
+
+La carpeta [`test_images/`](test_images/) contiene 4 imágenes reales del test set de HAM10000 listas para usar en la webapp:
+
+| Archivo | Etiqueta | Vista previa |
+|---|---|---|
+| [`melanoma_1.png`](test_images/melanoma_1.png) | **Melanoma** | ![](test_images/melanoma_1.png) |
+| [`melanoma_2.png`](test_images/melanoma_2.png) | **Melanoma** | ![](test_images/melanoma_2.png) |
+| [`nevus_1.png`](test_images/nevus_1.png) | **Nevus** | ![](test_images/nevus_1.png) |
+| [`nevus_2.png`](test_images/nevus_2.png) | **Nevus** | ![](test_images/nevus_2.png) |
+
+---
+
 ## Demo y recursos
 
 | Recurso | Enlace |
