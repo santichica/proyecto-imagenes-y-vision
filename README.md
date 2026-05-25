@@ -24,18 +24,18 @@ Clasificador EfficientNet-B0, test set 100% real (159 mel / 1 012 nv):
 | Escenario | AUC | Recall mel | F1 mel |
 |---|---|---|---|
 | Real only (baseline) | 0.911 | 0.528 | 0.579 |
-| Real + TI (2×) | 0.920 | 0.585 | 0.616 |
+| Real + TI (2×) | 0.920 | 0.585 | **0.616** |
 | Real + LoRA (2×) | 0.926 | 0.535 | 0.607 |
 | Real + WGAN-GP (2×) | **0.929** | 0.579 | 0.605 |
-| Real + Derm-T2IM s=0.40 (2×) | 0.917 | **0.604** | 0.585 |
-| Real + Derm-T2IM s=0.05 (2×) | — | — | — |
+| Real + Derm-T2IM s=0.40 (2×) | 0.917 | 0.604 | 0.585 |
+| Real + Derm-T2IM s=0.05 (2×) | 0.920 | **0.610** | 0.614 |
 | Synthetic only — TI | 0.561 | 0.000 | 0.000 |
 | Synthetic only — LoRA | 0.551 | 0.006 | 0.012 |
 | Synthetic only — WGAN-GP | 0.610 | 0.006 | 0.012 |
+| Synthetic only — Derm-T2IM s=0.40 | 0.845 | 0.145 | 0.236 |
 | Synthetic only — Derm-T2IM s=0.05 | 0.878 | 0.478 | 0.522 |
-| Synthetic only — Derm-T2IM s=0.40 | — | — | — |
 
-**Conclusiones:** la augmentación híbrida mejora el AUC en todos los generadores (+0.6–1.8 pp). En entrenamiento exclusivamente sintético, solo Derm-T2IM con perturbación mínima (strength=0.05, FID=21) mantiene viabilidad; TI, LoRA y WGAN-GP colapsan (Recall≈0) por domain shift severo. El FID es el indicador más predictivo de la transferibilidad del clasificador.
+**Conclusiones:** la augmentación híbrida mejora el AUC en todos los generadores (+0.6–1.8 pp); Derm-T2IM s=0.05 registra el mayor Recall (+8.2 pp). En entrenamiento exclusivamente sintético, solo Derm-T2IM mantiene viabilidad: s=0.05 (FID=21.1) obtiene AUC 0.878 y Recall 0.478; s=0.40 (FID=46.7) evita el colapso total pero con Recall bajo (0.145). TI, LoRA y WGAN-GP colapsan (Recall≈0). El FID es el indicador más predictivo de la transferibilidad del clasificador.
 
 ---
 
